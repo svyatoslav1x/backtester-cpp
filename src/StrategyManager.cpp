@@ -8,6 +8,10 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QHBoxLayout>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QComboBox>
 
 StrategyManager::StrategyManager(QWidget* parent)
 : QWidget(parent) {
@@ -165,6 +169,7 @@ void StrategyManager::load_strategies() {
             "QPushButton:hover { background-color: #0000f2; }"
             "QPushButton:pressed { background-color: #000087; }"
         );
+        connect(edit_btn, &QPushButton::clicked, [this, id]() { on_edit_clicked(id); });
         item_layout->addWidget(edit_btn);
 
         QPushButton* delete_btn = new QPushButton("Delete");
@@ -184,5 +189,144 @@ void StrategyManager::load_strategies() {
 
         item_widget->setLayout(item_layout);
     }
+}
+
+void StrategyManager::on_edit_clicked(int id) {
+    StrategyData strategy = get_strategy(id);
+    if (strategy.id < 0) {
+        return;
+    }
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("Edit Strategy");
+    dialog.setMinimumWidth(400);
+
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    QFormLayout* form_layout = new QFormLayout();
+
+    QLineEdit* name_edit = new QLineEdit(strategy.name);
+    form_layout->addRow("Strategy Name:", name_edit);
+
+    QComboBox* type_combo = new QComboBox();
+
+    //list of strategies
+    type_combo->addItems({"Moving Average Crossover", "strategy 1", "strategy 2", "strategy 3"});
+    int type_index = type_combo->findText(strategy.type);
+    if (type_index != -1) {
+        type_combo->setCurrentIndex(type_index);
+    }
+    form_layout->addRow("Strategy Type:", type_combo);
+
+    QSpinBox* short_spin = new QSpinBox();
+    short_spin->setRange(1, 1000);
+    short_spin->setValue(strategy.shortWindow);
+    form_layout->addRow("Short MA Window:", short_spin);
+
+    QSpinBox* long_spin = new QSpinBox();
+    long_spin->setRange(1, 1000);
+    long_spin->setValue(strategy.longWindow);
+    form_layout->addRow("Long MA Window:", long_spin);
+
+    layout->addLayout(form_layout);
+
+    QDialogButtonBox* button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    connect(button_box, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(button_box, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    layout->addWidget(button_box);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString new_name = name_edit->text().trimmed();
+        QString new_type = type_combo->currentText();
+        int short_val = short_spin->value();
+        int long_val = long_spin->value();
+
+        if (new_name == strategy.name &&
+            short_val == strategy.shortWindow &&
+            new_type == strategy.type &&
+            long_val == strategy.longWindow) {
+            QMessageBox::information(this, "No Changes", "Nothing was changed.");
+            return;
+            }
+
+        if (new_name.isEmpty()) {
+            QMessageBox::warning(this, "Invalid Input", "Strategy name cannot be empty.");
+            return;
+        }
+
+        if (long_val <= short_val) {
+            QMessageBox::warning(this, "Invalid Parameters",
+                "Long MA window must be greater than Short MA window.");
+            return;
+        }
+
+        if (strategy_name_exists(new_name, id)) {
+            QMessageBox::warning(this, "Duplicate Name",
+                "A strategy with this name already exists. Please choose a different name.");
+            return;
+        }
+
+        if (update_strategy(id, new_name, new_type, short_val, long_val)) {
+            load_strategies();
+            emit strategy_updated();
+            QMessageBox::information(this, "Success", "Strategy updated successfully!");
+        }
+    }
+}
+
+StrategyData StrategyManager::get_strategy(int id) {
+    StrategyData data;
+    data.id = -1;
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id, name, type, short_window, long_window FROM strategies WHERE id = ?");
+    query.addBindValue(id);
+    query.exec();
+
+    if (query.next()) {
+        data.id = query.value(0).toInt();
+        data.name = query.value(1).toString();
+        data.type = query.value(2).toString();
+        data.shortWindow = query.value(3).toInt();
+        data.longWindow = query.value(4).toInt();
+    }
+
+    return data;
+}
+
+bool StrategyManager::strategy_name_exists(const QString& name, int excludeId) {
+    QSqlQuery query(db);
+    if (excludeId >= 0) {
+        query.prepare("SELECT COUNT(*) FROM strategies WHERE name = ? AND id != ?");
+        query.addBindValue(name);
+        query.addBindValue(excludeId);
+    } else {
+        query.prepare("SELECT COUNT(*) FROM strategies WHERE name = ?");
+        query.addBindValue(name);
+    }
+
+    query.exec();
+    if (query.next()) {
+        return query.value(0).toInt() > 0;
+    }
+
+    return false;
+}
+
+bool StrategyManager::update_strategy(int id, const QString& name, const QString& type, int shortWindow, int longWindow) {
+    QSqlQuery query(db);
+    query.prepare("UPDATE strategies SET name = ?, type = ?, short_window = ?, long_window = ? WHERE id = ?");
+    query.addBindValue(name);
+    query.addBindValue(type);
+    query.addBindValue(shortWindow);
+    query.addBindValue(longWindow);
+    query.addBindValue(id);
+
+    if (!query.exec()) {
+        QMessageBox::warning(this, "Error",
+            "Failed to update strategy: " + query.lastError().text());
+        return false;
+    }
+
+    return true;
 }
 

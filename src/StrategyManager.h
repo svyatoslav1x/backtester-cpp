@@ -25,12 +25,22 @@ class StrategyManager : public QWidget {
     void setup_database();
     void setup_ui();
     void load_strategies();
+    void edit_strategy(int id);
+
+private slots:
+    void on_edit_clicked(int id);
+
+signals:
+    void strategy_updated();
 
 public:
     explicit StrategyManager(QWidget* parent = nullptr);
     ~StrategyManager();
 
     bool add_strategy(const QString& name, const QString& type, int shortWindow, int longWindow);
+    StrategyData get_strategy(int id);
+    bool strategy_name_exists(const QString& name, int excludeId = -1);
+    bool update_strategy(int id, const QString& name, const QString& type, int shortWindow, int longWindow);
 
 };
 
