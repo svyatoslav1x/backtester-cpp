@@ -5,10 +5,13 @@
 #include <QMessageBox>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QVBoxLayout>
+#include <QLabel>
 
 StrategyManager::StrategyManager(QWidget* parent)
 : QWidget(parent) {
     setup_database();
+    setup_ui();
 }
 
 StrategyManager::~StrategyManager() {
@@ -76,4 +79,39 @@ bool StrategyManager::add_strategy(const QString& name, const QString& type, int
     }
 
     return true;
+}
+
+void StrategyManager::setup_ui() {
+    setStyleSheet(
+    "QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1a1a2e, stop:1 #16213e); }"
+);
+
+    QVBoxLayout* main_layout = new QVBoxLayout(this);
+    main_layout->setContentsMargins(40, 40, 40, 40);
+
+    QLabel* title = new QLabel("<h1 style='color: #eee;'>📚 Strategy Management</h1>");
+    title->setAlignment(Qt::AlignCenter);
+    title->setStyleSheet("background: transparent; font-size: 24pt; font-weight: bold;");
+    main_layout->addWidget(title);
+
+    QLabel* subtitle = new QLabel("<p style='color: #aaa;'>View, Edit and Delete Saved Strategies</p>");
+    subtitle->setAlignment(Qt::AlignCenter);
+    subtitle->setStyleSheet("background: transparent; font-size: 14pt; margin-bottom: 20px;");
+    main_layout->addWidget(subtitle);
+
+    main_layout->addSpacing(20);
+
+    strategy_list = new QListWidget();
+    strategy_list->setStyleSheet(
+        "QListWidget { background-color: #0f3460; color: #eee; border: 2px solid #4CAF50; "
+        "border-radius: 8px; padding: 10px; font-size: 12pt; }"
+        "QListWidget::item { padding: 10px; border-bottom: 1px solid #2196F3; }"
+        "QListWidget::item:hover { background-color: #1a4d7a; }"
+        "QListWidget::item:selected { background-color: #2196F3; }"
+    );
+
+    main_layout->addWidget(strategy_list);
+
+    main_layout->addSpacing(20);
+
 }

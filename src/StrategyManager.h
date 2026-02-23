@@ -4,6 +4,7 @@
 #include <QString>
 #include <QWidget>
 #include <QSqlDatabase>
+#include <QListWidget>
 
 struct StrategyData {
     int id;
@@ -17,6 +18,9 @@ class StrategyManager : public QWidget {
     Q_OBJECT
 
     QSqlDatabase db;
+    QListWidget* strategy_list;
+
+    void setup_ui();
 
     void setup_database();
 

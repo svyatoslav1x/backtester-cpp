@@ -6,7 +6,8 @@ int main(int argc, char *argv[]) {
 
     StrategyManager window;
     window.setWindowTitle("Backtester");
-    window.resize(400, 300);
+    window.resize(1200, 800);
+
     window.show();
 
     return app.exec();
