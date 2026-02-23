@@ -24,6 +24,7 @@ class StrategyManager : public QWidget {
 
     void setup_database();
     void setup_ui();
+    void load_strategies();
 
 public:
     explicit StrategyManager(QWidget* parent = nullptr);

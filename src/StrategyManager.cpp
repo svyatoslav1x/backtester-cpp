@@ -13,6 +13,7 @@ StrategyManager::StrategyManager(QWidget* parent)
 : QWidget(parent) {
     setup_database();
     setup_ui();
+    load_strategies();
 }
 
 StrategyManager::~StrategyManager() {
@@ -132,3 +133,56 @@ void StrategyManager::setup_ui() {
     main_layout->addLayout(button_layout);
 
 }
+
+void StrategyManager::load_strategies() {
+    strategy_list->clear();
+
+    QSqlQuery query(db);
+    query.exec("SELECT id, name, type, short_window, long_window FROM strategies ORDER BY name");
+
+    while (query.next()) {
+        int id = query.value(0).toInt();
+        QString name = query.value(1).toString();
+        QString type = query.value(2).toString();
+        int short_win = query.value(3).toInt();
+        int long_win = query.value(4).toInt();
+
+        QWidget* item_widget = new QWidget();
+        QHBoxLayout* item_layout = new QHBoxLayout(item_widget);
+        item_layout->setContentsMargins(5, 5, 5, 5);
+
+        QLabel* info_label = new QLabel(QString("%1 (%2): %3/%4").arg(name).arg(type).arg(short_win).arg(long_win));
+        info_label->setStyleSheet("background: transparent; color: #eee; font-size: 13pt;");
+        item_layout->addWidget(info_label);
+
+        item_layout->addStretch();
+
+        QPushButton* edit_btn = new QPushButton("Edit");
+        edit_btn->setFixedSize(60, 20);
+        edit_btn->setStyleSheet(
+            "QPushButton { background-color: #0000c9; color: white; border: none; "
+            "border-radius: 5px; font-size: 8pt; font-weight: bold; }"
+            "QPushButton:hover { background-color: #0000f2; }"
+            "QPushButton:pressed { background-color: #000087; }"
+        );
+        item_layout->addWidget(edit_btn);
+
+        QPushButton* delete_btn = new QPushButton("Delete");
+        delete_btn->setFixedSize(60, 20);
+        delete_btn->setStyleSheet(
+            "QPushButton { background-color: #b80000; color: white; border: none; "
+            "border-radius: 5px; font-size: 8pt; font-weight: bold; }"
+            "QPushButton:hover { background-color: #d60000; }"
+            "QPushButton:pressed { background-color: #600000; }"
+        );
+        item_layout->addWidget(delete_btn);
+
+        QListWidgetItem* list_item = new QListWidgetItem(strategy_list);
+        list_item->setSizeHint(QSize(item_widget->sizeHint().width(), 60));
+        strategy_list->addItem(list_item);
+        strategy_list->setItemWidget(list_item, item_widget);
+
+        item_widget->setLayout(item_layout);
+    }
+}
+
