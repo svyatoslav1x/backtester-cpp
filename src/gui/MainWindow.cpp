@@ -1,18 +1,32 @@
-MainWindow::MainWindow(QWidget* parent): QMainWindow(parent) {
+#include "MainWindow.h"
+
+#include "screens/start_screen.h"
+
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setWindowTitle("Backtester Application");
 
-    Qpointer<QScreen> screen = QGuiApplication::primaryScreen();
+    QPointer<QScreen> screen = QGuiApplication::primaryScreen();
     QRect screenSize = screen->geometry();
-    int width = screenGeometry.width();
-    int height = screenGeometry.height();
-    resize(width * 0.69, height * 0.67);
+    int w = screenSize.width();
+    int h = screenSize.height();
+    resize(w * 0.69, h * 0.67);
+
+    QLinearGradient gradient(0, 0, w, h);
+    gradient.setColorAt(0.0, QColor("#BADBA2"));
+    gradient.setColorAt(1.0, QColor("#42D674"));
+
+    QPalette palette;
+    palette.setBrush(QPalette::Window, QBrush(gradient));
+    this->setPalette(palette);
+    this->setAutoFillBackground(true);
+
+    stacked_widget = new QStackedWidget(this);
+    start_screen = new StartScreen(this);
 
     stacked_widget->addWidget(start_screen);
-    stacked_widget->addWidget(strategy_screen);
-    stacked_widget->addWidget(create_strategy_screen);
-    stacked_widget->addWidget(manage_strategies_screen);
-    stacked_widget->addWidget(backtest_screen);
-    stacked_widget->addWidget(done_screen);
 
     stacked_widget->setCurrentIndex(0);
-};
+}
+
+MainWindow::~MainWindow() {
+}
