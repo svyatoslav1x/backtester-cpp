@@ -1,0 +1,8 @@
+//
+// Created by Alex on 23.02.2026.
+//
+
+#ifndef GUI_MAIN_WINDOW_MAINWINDOW_H
+#define GUI_MAIN_WINDOW_MAINWINDOW_H
+
+#endif //GUI_MAIN_WINDOW_MAINWINDOW_H
