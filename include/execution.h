@@ -19,7 +19,7 @@ public:
     //
     //     Parameters:
     //     event - Contains an Event object with order information.
-    virtual void execute_order(const OrderEvent& event) = 0;
+    virtual void execute_order(Event& event) = 0;
     virtual ~ExecutionHandler() = default;
 };
 
@@ -29,23 +29,22 @@ class SimulatedExecutionHandler : public ExecutionHandler {
 public:
     explicit SimulatedExecutionHandler(std::queue<std::unique_ptr<Event>>& events_): events(events_) {}
 
-    void execute_order(const Event& event) override {
+    void execute_order(Event& event) override {
         // Just check the type
         //TODO implement modern c++
         if (event.type() != EventType::ORDER)
             return;
+        //auto& order = dynamic_cast<OrderEvent&>(event);
 
-        auto& order = dynamic_cast<OrderEvent&>(event);
-
-        // Creare FillEvent
-        auto fill = std::make_unique<FillEvent>(
+        // Create FillEvent
+        FillEvent fill (
             std::chrono::system_clock::now(),  // время исполнения
-            order.get_symbol(),
+            event.get_symbol(),
             "SIM_EXCHANGE",                    // place holder
-            order.get_quantity(),
-            order.get_direction(),
-            0.0                             // fill_cost (можно 0 или рассчитанное значение)
+            event.get_quantity(),
+            event.get_direction(),
+            0.0                             // fill_cost
         );
-        events.push(std::move(fill));
+        events.push(std::move(std::make_unique<FillEvent>(fill)));
     }
 };

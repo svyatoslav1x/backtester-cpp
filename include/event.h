@@ -14,6 +14,9 @@ class Event { //base class from wich methods are inherited
 public:
     virtual ~Event() = default;
     virtual EventType type() const = 0; // return the market event
+    virtual std::string get_symbol() = 0;
+    virtual int get_quantity() = 0;
+    virtual std::string get_direction() = 0;
 };
 
 class MarketEvent : public Event { // is used to trigger the Strategy object generating new trading signals
@@ -25,6 +28,9 @@ public:
         EventType type() const override {
             return EventType::MARKET;
         }
+        std::string get_symbol() override = 0;
+        int get_quantity() override = 0;
+        std::string get_direction() override = 0;
     };
 };
 
@@ -40,9 +46,12 @@ public:
     EventType type() const override {
         return EventType::SIGNAL;
     }
+    std::string get_symbol() override {return symbol;}
+    int get_quantity() override {return quantity;}
+    std::string get_direction() override = 0;
 };
 
-class OrderEvent : Event {
+class OrderEvent : public Event {
     //has a print_order() method, used to output the information to the console if necessary
     //When a Portfolio object receives SignalEvents it assesses them in the wider context of the portfolio,
     //in terms of risk and position sizing. This ultimately leads to OrderEvents that will be sent to an ExecutionHandler
@@ -57,15 +66,15 @@ public:
     EventType type() const override {
         return EventType::ORDER;
     }
-    std::string get_symbol(){return symbol;}
-    std::string get_quantity(){return quantity;}
-    std::string get_direction(){return direction;}
+    std::string get_symbol() override {return symbol;}
+    int get_quantity() override {return quantity;}
+    std::string get_direction() override {return direction;}
     void print_order() {
         std::cout << "Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % (self.symbol, self.order_type, self.quantity, self.direction);
     }
 };
 
-class FillEvent : Event {
+class FillEvent : public Event {
     // When an ExecutionHandler receives an OrderEvent it must transact the order.
     // Once an order has been transacted it generates a FillEvent,
     // which describes the cost of purchase or sale as well as the transaction costs, such as fees or slippage.
@@ -80,12 +89,15 @@ class FillEvent : Event {
 public:
     //TODO add commission(com) to constructor
     FillEvent(std::chrono::system_clock::time_point time, std::string s, std::string ex, int q, std::string d, int full):
-    timeindex(time), symbol(s), exchange(ex), quantity(q), direction(d), fill_cost(full)
+    timeindex(time), symbol(std::move(s)), exchange(std::move(ex)), quantity(q), direction(std::move(d)), fill_cost(full)
     {}
     //TODO define the way of calculating commission
     int calculate_ib_commission(int commission_) { // to calculate commission
 
     }
+    std::string get_symbol() override {return symbol;}
+    int get_quantity() override {return quantity;}
+    std::string get_direction() override {return direction;}
     EventType type() const override {
         return EventType::FILL;
     }
