@@ -3,6 +3,8 @@
 #include <QMainWindow>
 #include <memory>
 #include <QPointer>
+#include <QScreen>
+#include <QGuiApplication>
 
 class QStackedWidget;
 class QWidget;
@@ -12,6 +14,7 @@ class MainWindow: public QMainWindow {
     // screens
     Qpointer<QStackedWidget> stacked_widget;
     Qpointer<QWidget> start_screen;
+    Qpointer<QWidget> strategy_screen;
     Qpointer<QWidget> create_strategy_screen;
     Qpointer<QWidget> manage_strategies_screen;
     Qpointer<QWidget> backtest_screen;
