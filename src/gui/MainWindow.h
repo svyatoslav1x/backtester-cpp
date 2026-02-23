@@ -23,7 +23,7 @@ private:
     QPointer<QWidget> start_screen;
     QPointer<QWidget> strategy_screen;
     QPointer<QWidget> create_strategy_screen;
-    QPointer<QWidget> manage_strategies_screen;
+    QPointer<QWidget> select_strategy_screen;
     QPointer<QWidget> backtest_screen;
     QPointer<QWidget> done_screen;
 };

@@ -21,6 +21,14 @@ public:
 private:
     void buildUi();
 
+    void setNewsHtml(const QString &html);
+
+    void setNewsText(const QString &text);
+
+    void setDatasets(const QStringList &names);
+
+    QString selectedDataset() const;
+
     QPointer<QVBoxLayout> main_layout;
     QPointer<QLabel> title_label;
     QPointer<QLabel> news_header;

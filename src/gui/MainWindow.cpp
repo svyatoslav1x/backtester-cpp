@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 
+#include "screens/select_strategy_screen.h"
 #include "screens/start_screen.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -22,10 +23,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     stacked_widget = new QStackedWidget(this);
     start_screen = new StartScreen(this);
+    select_strategy_screen = new SelectStrategyScreen(this);
 
     stacked_widget->addWidget(start_screen);
 
-    stacked_widget->setCurrentIndex(0);
+    stacked_widget->setCurrentIndex(1);
     setCentralWidget(stacked_widget);
 }
 

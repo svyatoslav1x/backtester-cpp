@@ -98,3 +98,34 @@ void StartScreen::buildUi() {
     main_layout->addLayout(button_layout);
     main_layout->addStretch();
 }
+
+
+void StartScreen::setNewsHtml(const QString &html) {
+    if (news_display) {
+        news_display->setHtml(html);
+    }
+}
+
+void StartScreen::setNewsText(const QString &text) {
+    if (news_display) {
+        news_display->setPlainText(text);
+    }
+}
+
+void StartScreen::setDatasets(const QStringList &names) {
+    if (!dataset_combo) return;
+    dataset_combo->clear();
+
+    if (names.isEmpty()) {
+        dataset_combo->addItem("No datasets found");
+    } else {
+        dataset_combo->addItems(names);
+    }
+}
+
+QString StartScreen::selectedDataset() const {
+    if (dataset_combo) {
+        return dataset_combo->currentText();
+    }
+    return "";
+}
