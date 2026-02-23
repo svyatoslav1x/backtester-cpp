@@ -330,3 +330,30 @@ bool StrategyManager::update_strategy(int id, const QString& name, const QString
     return true;
 }
 
+void StrategyManager::on_list_item_double_clicked(QListWidgetItem* item) {
+    int row = strategy_list->row(item);
+
+    auto strategies = get_all_strategies();
+    if (row >= 0 && row < strategies.size()) {
+        on_edit_clicked(strategies[row].id);
+    }
+}
+
+QVector<StrategyData> StrategyManager::get_all_strategies() {
+    QVector<StrategyData> strategies;
+
+    QSqlQuery query(db);
+    query.exec("SELECT id, name, type, short_window, long_window FROM strategies ORDER BY name");
+
+    while (query.next()) {
+        StrategyData data;
+        data.id = query.value(0).toInt();
+        data.name = query.value(1).toString();
+        data.type = query.value(2).toString();
+        data.shortWindow = query.value(3).toInt();
+        data.longWindow = query.value(4).toInt();
+        strategies.append(data);
+    }
+
+    return strategies;
+}
