@@ -38,7 +38,7 @@ class HistoricCSVDataHandler : DataHandler {
     // each requested symbol from disk and provide an interface
     // to obtain the "latest" bar in a manner identical to a live
     // trading interface.
-    std::queue<std::unique_ptr<Event>>& events; // events in queue
+    std::queue<std::unique_ptr<Event>>& events; // events in queue (Market, Signal, Order, Fill)
     std::string csv_dir; //the name of a market
     std::vector<std::string> symbols; //the list of target goods
 
@@ -78,13 +78,13 @@ class HistoricCSVDataHandler : DataHandler {
             latest_symbol_data[symbol] = {};
         }
     }
-
-    std::chrono::system_clock::time_point parse_datetime(
-        const std::string& dt
-    ) {
+    //sustem_clock - истемные часы
+    //time_point - конкретная точка во времени
+    //time_t - работает конкретно со временем из mktime и есть возможность измерить duration
+    std::chrono::system_clock::time_point parse_datetime(const std::string& dt) {
         std::tm tm{};
         std::stringstream ss(dt);
-        ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+        ss >> std::get_time(&tm, "%Y-%m-%d");
         return std::chrono::system_clock::from_time_t(std::mktime(&tm));
     }
 public:
