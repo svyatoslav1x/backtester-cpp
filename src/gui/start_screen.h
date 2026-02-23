@@ -1,0 +1,9 @@
+#ifndef GUI_MAIN_WINDOW_START_SCREEN_H
+#define GUI_MAIN_WINDOW_START_SCREEN_H
+
+
+class start_screen {
+};
+
+
+#endif //GUI_MAIN_WINDOW_START_SCREEN_H

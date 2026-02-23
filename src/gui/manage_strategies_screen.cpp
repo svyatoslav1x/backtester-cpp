@@ -1,0 +1,1 @@
+#include "manage_strategies_screen.h"
