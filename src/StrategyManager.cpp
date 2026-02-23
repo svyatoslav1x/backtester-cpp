@@ -180,6 +180,7 @@ void StrategyManager::load_strategies() {
             "QPushButton:hover { background-color: #d60000; }"
             "QPushButton:pressed { background-color: #600000; }"
         );
+        connect(delete_btn, &QPushButton::clicked, [this, id]() { on_delete_clicked(id); });
         item_layout->addWidget(delete_btn);
 
         QListWidgetItem* list_item = new QListWidgetItem(strategy_list);
@@ -356,4 +357,36 @@ QVector<StrategyData> StrategyManager::get_all_strategies() {
     }
 
     return strategies;
+}
+
+void StrategyManager::on_delete_clicked(int id) {
+    StrategyData strategy = get_strategy(id);
+    if (strategy.id < 0) {
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
+        QString("Are you sure you want to delete strategy '%1'?").arg(strategy.name),
+        QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        if (remove_strategy(id)) {
+            load_strategies();
+            emit strategy_updated();
+        }
+    }
+}
+
+bool StrategyManager::remove_strategy(int id) {
+    QSqlQuery query(db);
+    query.prepare("DELETE FROM strategies WHERE id = ?");
+    query.addBindValue(id);
+
+    if (!query.exec()) {
+        QMessageBox::warning(this, "Error",
+            "Failed to delete strategy: " + query.lastError().text());
+        return false;
+    }
+
+    return true;
 }

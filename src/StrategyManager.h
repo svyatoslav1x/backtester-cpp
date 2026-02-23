@@ -30,6 +30,7 @@ class StrategyManager : public QWidget {
 private slots:
     void on_edit_clicked(int id);
     void on_list_item_double_clicked(QListWidgetItem* item);
+    void on_delete_clicked(int id);
 
 signals:
     void strategy_updated();
@@ -43,6 +44,7 @@ public:
     bool strategy_name_exists(const QString& name, int excludeId = -1);
     bool update_strategy(int id, const QString& name, const QString& type, int shortWindow, int longWindow);
     QVector<StrategyData> get_all_strategies();
+    bool remove_strategy(int id);
 
 };
 
