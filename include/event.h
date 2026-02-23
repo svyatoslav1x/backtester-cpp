@@ -2,18 +2,33 @@
 #include <iostream>
 #include <string>
 
-class Event { //base class from wich methods are inherited
-    virtual std::string type(); // return the market event
+
+enum class EventType {
+    MARKET,
+    SIGNAL,
+    ORDER,
+    FILL
 };
 
-class MarketEvent : Event { // is used to trigger the Strategy object generating new trading signals
+class Event { //base class from wich methods are inherited
+public:
+    virtual ~Event() = default;
+    virtual EventType type() const = 0; // return the market event
+};
+
+class MarketEvent : public Event { // is used to trigger the Strategy object generating new trading signals
     //triggered when the outer while loop begins a new "heartbeat"
     // and DataHandler object receives a new update of market data for any symbols which are currently being tracked
 public:
-    std::string type() const override{return "MARKET";}
+    class MarketEvent : public Event {
+    public:
+        EventType type() const override {
+            return EventType::MARKET;
+        }
+    };
 };
 
-class SignalEvent : Event { // are utilised by the Portfolio object as advice for how to trade
+class SignalEvent : public Event { // are utilised by the Portfolio object as advice for how to trade
     //The Strategy object utilises market data to create new SignalEvents
     std::string symbol; // the ticker symbol
     std::chrono::system_clock::time_point datatime; //when it was generated
@@ -22,7 +37,9 @@ class SignalEvent : Event { // are utilised by the Portfolio object as advice fo
 public:
     SignalEvent (std::string symbol, std::chrono::system_clock::time_point datatime, std::string signal_type, int quantity):
     symbol(symbol), datatime(datatime), signal_type(signal_type), quantity(quantity){}
-    std::string type() const override{return "SIGNAL";}
+    EventType type() const override {
+        return EventType::SIGNAL;
+    }
 };
 
 class OrderEvent : Event {
@@ -35,9 +52,14 @@ class OrderEvent : Event {
     std::string direction; //'BUY' or 'SELL' for long or short.
 public:
     OrderEvent(std::string symbol, std::string order_type, int quantity, std::string direction) :
-    symbol(symbol), order_type(order_type), quentity(quantity), direction(direction)
+    symbol(symbol), order_type(order_type), quantity(quantity), direction(direction)
     {}
-    std::string type() const override{return "ORDER";}
+    EventType type() const override {
+        return EventType::ORDER;
+    }
+    std::string get_symbol(){return symbol;}
+    std::string get_quantity(){return quantity;}
+    std::string get_direction(){return direction;}
     void print_order() {
         std::cout << "Order: Symbol=%s, Type=%s, Quantity=%s, Direction=%s" % (self.symbol, self.order_type, self.quantity, self.direction);
     }
@@ -56,11 +78,15 @@ class FillEvent : Event {
     int fill_cost; //The holdings value in ???? dollars ?????????
     int commission; //An optional commission sent from IB.
 public:
-    FillEvent(std::chrono::system_clock::time_point time, std::string s, std::string ex, int q, std::string d, int full, int com):
-    timeindex(time), symbol(s), exchange(ex), quantity(q), direction(d), fill_cost(full), commission(com)
+    //TODO add commission(com) to constructor
+    FillEvent(std::chrono::system_clock::time_point time, std::string s, std::string ex, int q, std::string d, int full):
+    timeindex(time), symbol(s), exchange(ex), quantity(q), direction(d), fill_cost(full)
     {}
     //TODO define the way of calculating commission
     int calculate_ib_commission(int commission_) { // to calculate commission
 
+    }
+    EventType type() const override {
+        return EventType::FILL;
     }
 };
