@@ -7,6 +7,7 @@
 #include <QSqlQuery>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QHBoxLayout>
 
 StrategyManager::StrategyManager(QWidget* parent)
 : QWidget(parent) {
@@ -113,5 +114,21 @@ void StrategyManager::setup_ui() {
     main_layout->addWidget(strategy_list);
 
     main_layout->addSpacing(20);
+
+    QHBoxLayout* button_layout = new QHBoxLayout();
+
+    back_button = new QPushButton("Back");
+    back_button->setMinimumSize(150, 60);
+    back_button->setStyleSheet(
+        "QPushButton { background-color: #555; color: white; border: none; "
+        "border-radius: 8px; font-size: 16pt; font-weight: bold; }"
+        "QPushButton:hover { background-color: #666; }"
+        "QPushButton:pressed { background-color: #444; }"
+    );
+
+    button_layout->addWidget(back_button);
+    button_layout->addStretch();
+
+    main_layout->addLayout(button_layout);
 
 }

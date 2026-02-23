@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QSqlDatabase>
 #include <QListWidget>
+#include <QPushButton>
 
 struct StrategyData {
     int id;
@@ -19,10 +20,10 @@ class StrategyManager : public QWidget {
 
     QSqlDatabase db;
     QListWidget* strategy_list;
-
-    void setup_ui();
+    QPushButton* back_button;
 
     void setup_database();
+    void setup_ui();
 
 public:
     explicit StrategyManager(QWidget* parent = nullptr);
