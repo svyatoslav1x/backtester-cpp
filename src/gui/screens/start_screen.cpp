@@ -1,29 +1,6 @@
 #include "start_screen.h"
+#include "style.h"
 
-void setLabelStyle(QLabel *label, int required_size, bool bold, const QColor &color) {
-    QFont f = label->font();
-    f.setPointSize(required_size);
-    f.setBold(bold);
-    label->setFont(f);
-
-    QPalette p = label->palette();
-    p.setColor(QPalette::WindowText, color);
-    label->setPalette(p);
-    label->setAutoFillBackground(false);
-}
-
-void applyButtonStyle(QPushButton *button, const QColor &backgroundColor, const QColor &textColor) {
-    QFont f = button->font();
-    f.setPointSize(13);
-    f.setBold(true);
-    button->setFont(f);
-
-    QPalette p = button->palette();
-    p.setColor(QPalette::Button, backgroundColor);
-    p.setColor(QPalette::ButtonText, textColor);
-    button->setPalette(p);
-    button->setAutoFillBackground(true);
-}
 
 StartScreen::StartScreen(QWidget *parent) : QWidget(parent) {
     buildUi();
@@ -71,7 +48,6 @@ void StartScreen::buildUi() {
     QFont f = dataset_combo->font();
     f.setPointSize(15);
     dataset_combo->setFont(f);
-
     QPalette p = dataset_combo->palette();
     p.setColor(QPalette::Base, backgroundColor);
     dataset_combo->setPalette(p);
@@ -83,17 +59,17 @@ void StartScreen::buildUi() {
     manage_strategies_button = new QPushButton("Manage Strategies");
     button_layout->addWidget(manage_strategies_button);
     manage_strategies_button->setMinimumSize(180, 50);
-    applyButtonStyle(manage_strategies_button, QColor(255, 192, 203), Qt::black);
+    setButtonStyle(manage_strategies_button, QColor(255, 192, 203), Qt::black);
 
     create_strategy_button = new QPushButton("Create Strategy");
     button_layout->addWidget(create_strategy_button);
     create_strategy_button->setMinimumSize(180, 50);
-    applyButtonStyle(create_strategy_button, QColor(37, 150, 190), Qt::black);
+    setButtonStyle(create_strategy_button, QColor(37, 150, 190), Qt::black);
 
     start_button = new QPushButton("Start Backtest");
     button_layout->addWidget(start_button);
     start_button->setMinimumSize(180, 50);
-    applyButtonStyle(start_button, QColor(128, 0, 128), Qt::black);
+    setButtonStyle(start_button, QColor(208, 0, 255), Qt::black);
 
     main_layout->addLayout(button_layout);
     main_layout->addStretch();

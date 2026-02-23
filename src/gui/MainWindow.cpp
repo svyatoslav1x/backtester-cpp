@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     select_strategy_screen = new SelectStrategyScreen(this);
 
     stacked_widget->addWidget(start_screen);
+    stacked_widget->addWidget(select_strategy_screen);
 
     stacked_widget->setCurrentIndex(1);
     setCentralWidget(stacked_widget);

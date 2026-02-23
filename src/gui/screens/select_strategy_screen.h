@@ -1,7 +1,11 @@
 #ifndef GUI_MAIN_WINDOW_SELECT_STRATEGY_SCREEN_H
 #define GUI_MAIN_WINDOW_SELECT_STRATEGY_SCREEN_H
 
-#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPointer>
+#include <QLabel>
+#include <QPushButton>
+#include <QComboBox>
 
 class SelectStrategyScreen : public QWidget {
     Q_OBJECT
@@ -13,7 +17,12 @@ private:
     void buildUi();
 
     QPointer<QVBoxLayout> layout;
-
+    QPointer<QLabel> title;
+    QPointer<QLabel> strategy_label;
+    QPointer<QComboBox> strategy_combo;
+    QPointer<QHBoxLayout> button_layout;
+    QPointer<QPushButton> back_button;
+    QPointer<QPushButton> next_button;
 };
 
 

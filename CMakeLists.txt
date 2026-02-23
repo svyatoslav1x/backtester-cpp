@@ -15,6 +15,9 @@ set(SOURCES
         src/main.cpp
         src/gui/MainWindow.cpp
         src/gui/screens/start_screen.cpp
+        src/gui/screens/select_strategy_screen.cpp
+        src/gui/screens/style.h
+        src/gui/screens/style.h
 )
 
 add_executable(Backtester ${SOURCES})
