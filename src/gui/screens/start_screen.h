@@ -3,6 +3,10 @@
 
 #include <QComboBox>
 #include <QPointer>
+#include <QVBoxLayout>
+#include <QTextEdit>
+#include <QLabel>
+#include <QPushButton>
 
 class StartScreen : public QWidget {
     Q_OBJECT
@@ -17,7 +21,16 @@ public:
 private:
     void buildUi();
 
+    QPointer<QVBoxLayout> main_layout;
+    QPointer<QLabel> title_label;
+    QPointer<QLabel> news_header;
+    QPointer<QLabel> dataset_text;
+    QPointer<QTextEdit> news_display;
     QPointer<QComboBox> dataset_combo;
+    QPointer<QHBoxLayout> button_layout;
+    QPointer<QPushButton> manage_strategies_button;
+    QPointer<QPushButton> create_strategy_button;
+    QPointer<QPushButton> start_button;
 };
 
 

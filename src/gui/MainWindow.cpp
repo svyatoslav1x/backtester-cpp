@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     stacked_widget->addWidget(start_screen);
 
     stacked_widget->setCurrentIndex(0);
+    setCentralWidget(stacked_widget);
 }
 
 MainWindow::~MainWindow() {
