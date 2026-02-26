@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include "screens/create_strategy_screen.h"
+#include "screens/done_screen.h"
 #include "screens/select_strategy_screen.h"
 #include "screens/start_screen.h"
 
@@ -27,12 +28,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     start_screen = new StartScreen(this);
     select_strategy_screen = new SelectStrategyScreen(this);
     create_strategy_screen = new CreateStrategyScreen(this);
+    done_screen = new DoneScreen(this);
 
     stacked_widget->addWidget(start_screen);
     stacked_widget->addWidget(select_strategy_screen);
     stacked_widget->addWidget(create_strategy_screen);
+    stacked_widget->addWidget(done_screen);
 
-    stacked_widget->setCurrentIndex(0);
+    stacked_widget->setCurrentIndex(1);
     setCentralWidget(stacked_widget);
 }
 

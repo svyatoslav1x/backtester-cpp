@@ -1,9 +1,0 @@
-#ifndef GUI_MAIN_WINDOW_BACKTEST_SCREEN_H
-#define GUI_MAIN_WINDOW_BACKTEST_SCREEN_H
-
-
-class backtest_screen {
-};
-
-
-#endif //GUI_MAIN_WINDOW_BACKTEST_SCREEN_H

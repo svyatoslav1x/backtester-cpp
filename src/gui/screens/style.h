@@ -24,7 +24,9 @@ inline const std::vector<QColor> colors = {
     QColor(71, 85, 105), // 8 dark blue
     QColor(245, 247, 250), // 9 whitish
     QColor(37, 99, 235), // 10 blue
-    QColor(30, 64, 175) // 11 darker blue
+    QColor(30, 64, 175), // 11 darker blue
+    QColor(240, 244, 248), // todo: add better description for each color
+    QColor(236, 241, 246) // todo: add some kind of examples maybe (?)
 };
 
 inline QColor transparentBlack(int transparent) {
@@ -80,8 +82,8 @@ inline void setEditStyle(QWidget *widget, const QColor &baseColor, const QColor 
     if (auto *spin = qobject_cast<QSpinBox *>(widget)) {
         spin->setFrame(true);
         QPalette sp = spin->palette();
-        sp.setColor(QPalette::Base, QColor(240, 244, 248));
-        sp.setColor(QPalette::Button, QColor(236, 241, 246));
+        sp.setColor(QPalette::Base, colors[12]);
+        sp.setColor(QPalette::Button, colors[13]);
         sp.setColor(QPalette::Text, textColor);
         sp.setColor(QPalette::ButtonText, textColor);
         spin->setPalette(sp);
