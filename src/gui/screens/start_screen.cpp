@@ -1,6 +1,6 @@
 #include "start_screen.h"
 #include "style.h"
-
+#include <QSizePolicy>
 
 StartScreen::StartScreen(QWidget *parent) : QWidget(parent) {
     buildUi();
@@ -8,73 +8,78 @@ StartScreen::StartScreen(QWidget *parent) : QWidget(parent) {
 
 void StartScreen::buildUi() {
     main_layout = new QVBoxLayout(this);
-    main_layout->setContentsMargins(10, 10, 10, 10);
+    main_layout->setContentsMargins(20, 10, 20, 10);
+    main_layout->setSpacing(10);
+
+    const int controlHeight = 42;
 
     title_label = new QLabel("Backtester", this);
-    setLabelStyle(title_label, 24, true, QColor("black"));
     title_label->setAlignment(Qt::AlignCenter);
-    main_layout->addWidget(title_label);
-    main_layout->addStretch();
+    title_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    setLabelStyle(title_label, colors[3], 24, true);
+    main_layout->addWidget(title_label, 0);
+
+    main_layout->addSpacing(6);
 
     news_header = new QLabel("Economic News", this);
-    setLabelStyle(news_header, 15, true, QColor("black"));
     news_header->setAlignment(Qt::AlignCenter);
-    main_layout->addWidget(news_header);
-    main_layout->addStretch();
+    news_header->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    setLabelStyle(news_header, colors[10], 14, true);
+    main_layout->addWidget(news_header, 0);
 
     news_display = new QTextEdit(this);
     news_display->setReadOnly(true);
-    news_display->setMinimumHeight(150);
-    news_display->setMaximumHeight(200);
-    QColor backgroundColor(0, 0, 0, 80);
-    QColor textColor(Qt::white);
-    QPalette pal = news_display->palette();
-    pal.setColor(QPalette::Base, backgroundColor);
-    pal.setColor(QPalette::Text, textColor);
-    news_display->setPalette(pal);
-    news_display->setAutoFillBackground(false);
-    QFont newsFont = news_display->font();
-    newsFont.setPointSize(10);
-    news_display->setFont(newsFont);
-    main_layout->addWidget(news_display);
+    news_display->setMinimumSize(520, 140);
+    news_display->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setTextDisplayStyle(news_display, colors[6], colors[3], 10, false);
+    main_layout->addWidget(news_display, 0);
+
+    main_layout->addSpacing(8);
 
     dataset_text = new QLabel("Select Dataset", this);
-    setLabelStyle(dataset_text, 15, true, QColor("black"));
-    dataset_text->setAlignment(Qt::AlignCenter);
-    main_layout->addWidget(dataset_text);
+    dataset_text->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    dataset_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    setLabelStyle(dataset_text, colors[3], 12, true);
+    main_layout->addWidget(dataset_text, 0);
 
     dataset_combo = new QComboBox(this);
-    dataset_combo->setMinimumHeight(40);
-    QFont f = dataset_combo->font();
-    f.setPointSize(15);
-    dataset_combo->setFont(f);
-    QPalette p = dataset_combo->palette();
-    p.setColor(QPalette::Base, backgroundColor);
-    dataset_combo->setPalette(p);
-    dataset_combo->setAutoFillBackground(true);
-    main_layout->addWidget(dataset_combo);
+    dataset_combo->setMinimumHeight(controlHeight);
+    dataset_combo->setMinimumWidth(220);
+    dataset_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    setComboStyle(dataset_combo, colors[6], colors[3], 11, false);
+    main_layout->addWidget(dataset_combo, 0);
+
+    main_layout->addSpacing(14);
 
     button_layout = new QHBoxLayout();
+    button_layout->setSpacing(12);
 
-    manage_strategies_button = new QPushButton("Manage Strategies");
+    manage_strategies_button = new QPushButton("Manage Strategies", this);
+    manage_strategies_button->setMinimumHeight(42);
+    manage_strategies_button->setMinimumWidth(150);
+    manage_strategies_button->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setSecondaryButtonStyle(manage_strategies_button, 11, true);
+
+    create_strategy_button = new QPushButton("Create Strategy", this);
+    create_strategy_button->setMinimumHeight(42);
+    create_strategy_button->setMinimumWidth(140);
+    create_strategy_button->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setButtonStyle(create_strategy_button, colors[0], colors[1], 11, true);
+
+    start_button = new QPushButton("Start Backtest", this);
+    start_button->setMinimumHeight(42);
+    start_button->setMinimumWidth(140);
+    start_button->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    setButtonStyle(start_button, colors[0], colors[1], 11, true);
+
+    button_layout->addStretch();
     button_layout->addWidget(manage_strategies_button);
-    manage_strategies_button->setMinimumSize(180, 50);
-    setButtonStyle(manage_strategies_button, QColor(255, 192, 203), Qt::black);
-
-    create_strategy_button = new QPushButton("Create Strategy");
     button_layout->addWidget(create_strategy_button);
-    create_strategy_button->setMinimumSize(180, 50);
-    setButtonStyle(create_strategy_button, QColor(37, 150, 190), Qt::black);
-
-    start_button = new QPushButton("Start Backtest");
     button_layout->addWidget(start_button);
-    start_button->setMinimumSize(180, 50);
-    setButtonStyle(start_button, QColor(208, 0, 255), Qt::black);
+    button_layout->addStretch();
 
     main_layout->addLayout(button_layout);
-    main_layout->addStretch();
 }
-
 
 void StartScreen::setNewsHtml(const QString &html) {
     if (news_display) {

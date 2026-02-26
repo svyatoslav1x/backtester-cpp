@@ -13,8 +13,15 @@ class SelectStrategyScreen : public QWidget {
 public:
     explicit SelectStrategyScreen(QWidget *parent = nullptr);
 
+    void setStrategies(const QList<QPair<QString, int> > &items);
+
+    int selectedStrategyId() const;
+
+    QString selectedStrategyText() const;
+
 private:
     void buildUi();
+
 
     QPointer<QVBoxLayout> layout;
     QPointer<QLabel> title;

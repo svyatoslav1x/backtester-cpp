@@ -16,7 +16,7 @@ set(SOURCES
         src/gui/MainWindow.cpp
         src/gui/screens/start_screen.cpp
         src/gui/screens/select_strategy_screen.cpp
-        src/gui/screens/style.h
+        src/gui/screens/create_strategy_screen.cpp
         src/gui/screens/style.h
 )
 

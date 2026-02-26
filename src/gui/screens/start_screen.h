@@ -14,13 +14,6 @@ class StartScreen : public QWidget {
 public:
     explicit StartScreen(QWidget *parent = nullptr);
 
-    void chooseDatasets(const QStringList &names);
-
-    QString chosenDataset() const;
-
-private:
-    void buildUi();
-
     void setNewsHtml(const QString &html);
 
     void setNewsText(const QString &text);
@@ -28,6 +21,9 @@ private:
     void setDatasets(const QStringList &names);
 
     QString selectedDataset() const;
+
+private:
+    void buildUi();
 
     QPointer<QVBoxLayout> main_layout;
     QPointer<QLabel> title_label;
