@@ -22,6 +22,13 @@ public:
 
     QString selectedDataset() const;
 
+signals:
+    void manageStrategiesSwitch();
+
+    void createStrategySwitch();
+
+    void startBacktestSwitch(const QString &dataset);
+
 private:
     void buildUi();
 
@@ -36,6 +43,5 @@ private:
     QPointer<QPushButton> create_strategy_button;
     QPointer<QPushButton> start_button;
 };
-
 
 #endif //GUI_MAIN_WINDOW_START_SCREEN_H

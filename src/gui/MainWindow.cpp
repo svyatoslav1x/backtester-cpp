@@ -35,8 +35,50 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     stacked_widget->addWidget(create_strategy_screen);
     stacked_widget->addWidget(done_screen);
 
-    stacked_widget->setCurrentIndex(1);
+    stacked_widget->setCurrentIndex(0);
     setCentralWidget(stacked_widget);
+
+    auto start = qobject_cast<StartScreen *>(stacked_widget->widget(0));
+    auto select = qobject_cast<SelectStrategyScreen *>(stacked_widget->widget(1));
+    auto create = qobject_cast<CreateStrategyScreen *>(stacked_widget->widget(2));
+    auto done = qobject_cast<DoneScreen *>(stacked_widget->widget(3));
+
+    // buttons on start screen
+    connect(start, &StartScreen::manageStrategiesSwitch, this, [this] {
+        stacked_widget->setCurrentWidget(select_strategy_screen);
+    });
+
+    connect(start, &StartScreen::createStrategySwitch, this, [this] {
+        stacked_widget->setCurrentWidget(create_strategy_screen);
+    });
+
+    connect(start, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
+        // todo: add the function to save dataset
+        stacked_widget->setCurrentWidget(select_strategy_screen);
+    });
+
+    // buttons on select strategies screen
+    connect(select, &SelectStrategyScreen::StartScreenSwitch, this, [this] {
+        stacked_widget->setCurrentIndex(0);
+    });
+
+    connect(select, &SelectStrategyScreen::StartBacktestSwitch, this, [this] {
+        // stacked_widget->setCurrentIndex(); waiting on Nikita
+    });
+
+    // buttons on create strategies screen
+    connect(create, &CreateStrategyScreen::StartScreenSwitch, this, [this] {
+        stacked_widget->setCurrentIndex(0);
+    });
+
+    // buttons on done screem
+    connect(done, &DoneScreen::BacktestScreenSwitch, this, [this] {
+        // stacked_widget->setCurrentIndex(); waiting on Nikita
+    });
+
+    connect(done, &DoneScreen::StartScreenSwitch, this, [this] {
+        stacked_widget->setCurrentIndex(0);
+    });
 }
 
 MainWindow::~MainWindow() = default;

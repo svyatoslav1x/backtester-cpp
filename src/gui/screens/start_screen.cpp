@@ -1,6 +1,6 @@
 #include "start_screen.h"
 #include "style.h"
-#include <QSizePolicy>
+#include "../MainWindow.h"
 
 StartScreen::StartScreen(QWidget *parent) : QWidget(parent) {
     buildUi();
@@ -41,16 +41,27 @@ void StartScreen::buildUi() {
     manage_strategies_button = new QPushButton("Manage Strategies", this); // button to manage strategies
     manage_strategies_button->setMinimumHeight(42);
     manage_strategies_button->setMinimumWidth(150);
+    connect(manage_strategies_button, &QPushButton::clicked, this, [this] {
+        emit manageStrategiesSwitch();
+    });
     setSecondaryButtonStyle(manage_strategies_button, 11, true);
 
     create_strategy_button = new QPushButton("Create Strategy", this); // button to create a strategy
     create_strategy_button->setMinimumHeight(42);
     create_strategy_button->setMinimumWidth(140);
+    connect(create_strategy_button, &QPushButton::clicked, this, [this] {
+        emit createStrategySwitch();
+    });
     setButtonStyle(create_strategy_button, colors[0], colors[1], 11, true);
 
     start_button = new QPushButton("Start Backtest", this); // button to start backtest
     start_button->setMinimumHeight(42);
     start_button->setMinimumWidth(140);
+    connect(start_button, &QPushButton::clicked, this, [this] {
+        const QString ds = selectedDataset();
+        if (ds.isEmpty()) return;
+        emit startBacktestSwitch(ds);
+    });
     setButtonStyle(start_button, colors[0], colors[1], 11, true);
 
     button_layout->addWidget(manage_strategies_button);

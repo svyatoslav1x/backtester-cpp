@@ -34,11 +34,17 @@ void SelectStrategyScreen::buildUi() {
     back_button = new QPushButton("Back"); // button to the main window
     back_button->setMinimumSize(120, 42);
     setSecondaryButtonStyle(back_button, 11, true);
+    connect(back_button, &QPushButton::clicked, this, [this] {
+        emit StartScreenSwitch();
+    });
     button_layout->addWidget(back_button);
 
     next_button = new QPushButton("Start Backtest"); // button to start backtest
     next_button->setMinimumSize(170, 42);
     setButtonStyle(next_button, colors[0], colors[1], 11, true);
+    connect(next_button, &QPushButton::clicked, this, [this] {
+        emit StartBacktestSwitch();
+    });
     button_layout->addWidget(next_button);
 
     button_layout->addStretch();

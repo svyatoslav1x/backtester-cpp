@@ -30,6 +30,9 @@ private:
     QPointer<QHBoxLayout> button_layout;
     QPointer<QPushButton> back_button;
     QPointer<QPushButton> next_button;
+signals:
+    void StartScreenSwitch();
+    void StartBacktestSwitch();
 };
 
 

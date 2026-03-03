@@ -52,6 +52,9 @@ private:
     QPointer<QHBoxLayout> button_layout;
     QPointer<QPushButton> back_button;
     QPointer<QPushButton> save_button;
+
+signals:
+    void StartScreenSwitch();
 };
 
 

@@ -26,5 +26,9 @@ private:
     QPointer<QPushButton> return_starting_screen;
     QPointer<QPushButton> return_charts_screen;
     QPointer<QWidget> buttons_widget;
+signals:
+    void StartScreenSwitch();
+
+    void BacktestScreenSwitch();
 };
 #endif //GUI_MAIN_WINDOW_DONE_SCREEN_H

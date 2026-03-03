@@ -99,6 +99,9 @@ void CreateStrategyScreen::buildUi() {
     back_button = new QPushButton("Back", this); // button to main screen
     back_button->setMinimumSize(120, 42);
     setSecondaryButtonStyle(back_button, 11, true);
+    connect(back_button, &QPushButton::clicked, this, [this] {
+        emit StartScreenSwitch();
+    });
     button_layout->addWidget(back_button);
 
     button_layout->addStretch();
@@ -106,6 +109,10 @@ void CreateStrategyScreen::buildUi() {
     save_button = new QPushButton("Save and Use", this); // button to save and get back to main screen
     save_button->setMinimumSize(150, 42);
     setButtonStyle(save_button, colors[0], colors[1], 11, true);
+    // todo: logic for adding a strategy
+    connect(save_button, &QPushButton::clicked, this, [this] {
+        emit StartScreenSwitch();
+    });
     button_layout->addWidget(save_button);
 
     layout->addLayout(button_layout);
