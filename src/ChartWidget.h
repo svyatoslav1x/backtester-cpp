@@ -14,6 +14,9 @@ class InteractiveChartView : public QChartView {
 public:
     explicit InteractiveChartView(QChart* chart, QWidget* parent = nullptr);
 
+protected:
+    void wheelEvent(QWheelEvent* event) override;
+
 };
 
 class ChartWidget : public QWidget {

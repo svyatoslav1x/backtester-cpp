@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         time_step++;
     };
 
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 50; ++i) {
         simulate_step();
     }
 

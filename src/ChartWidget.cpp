@@ -1,6 +1,17 @@
 #include "ChartWidget.h"
 #include <QVBoxLayout>
 
+InteractiveChartView::InteractiveChartView(QChart* chart, QWidget* parent)
+    : QChartView(chart, parent) {
+    setRubberBand(QChartView::RectangleRubberBand);
+}
+
+void InteractiveChartView::wheelEvent(QWheelEvent* event) {
+    qreal factor = event->angleDelta().y() > 0 ? 0.97 : 1.03;
+    chart()->zoom(factor);
+    QChartView::wheelEvent(event);
+}
+
 ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent)
     : QWidget(parent), is_price_chart(price_chart), data_point_counter(0) {
 
@@ -81,11 +92,6 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
     layout->addWidget(chart_view);
     layout->setContentsMargins(5, 5, 5, 5);
     setLayout(layout);
-}
-
-InteractiveChartView::InteractiveChartView(QChart* chart, QWidget* parent)
-    : QChartView(chart, parent) {
-    setRubberBand(QChartView::RectangleRubberBand);
 }
 
 ChartWidget::~ChartWidget() {}
