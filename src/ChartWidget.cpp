@@ -1,5 +1,7 @@
 #include "ChartWidget.h"
 #include <QVBoxLayout>
+#include <QTimer>
+#include <QToolTip>
 
 InteractiveChartView::InteractiveChartView(QChart* chart, QWidget* parent)
     : QChartView(chart, parent) {
@@ -10,6 +12,12 @@ void InteractiveChartView::wheelEvent(QWheelEvent* event) {
     qreal factor = event->angleDelta().y() > 0 ? 0.97 : 1.03;
     chart()->zoom(factor);
     QChartView::wheelEvent(event);
+}
+
+void InteractiveChartView::mouseMoveEvent(QMouseEvent* event) {
+    QPointF chartPoint = chart()->mapToValue(event->pos());
+    emit pointHovered(chartPoint);
+    QChartView::mouseMoveEvent(event);
 }
 
 ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent)
@@ -69,6 +77,8 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
 
     chart_view = new InteractiveChartView(chart);
     chart_view->setRenderHint(QPainter::Antialiasing);
+
+    connect(chart_view, &InteractiveChartView::pointHovered, this, &ChartWidget::on_point_hovered);
 
     tooltip_label = new QLabel(this);
     tooltip_label->setStyleSheet(
@@ -184,4 +194,59 @@ void ChartWidget::update_metrics() {
     }
 
     metrics_label->setText(metrics_text);
+}
+
+QString ChartWidget::format_point_info(const QPointF& point) {
+    int x_idx = static_cast<int>(std::round(point.x()));
+
+    if (x_idx < 0 || x_data.empty()) {
+        return QString("");
+    }
+
+    size_t closest_idx = 0;
+    double min_dist = std::abs(x_data[0] - point.x());
+    for (size_t i = 1; i < x_data.size(); ++i) {
+        double dist = std::abs(x_data[i] - point.x());
+        if (dist < min_dist) {
+            min_dist = dist;
+            closest_idx = i;
+        }
+    }
+
+    if (min_dist > 1.0) {
+        return QString("");
+    }
+
+    QString info;
+    if (is_price_chart && closest_idx < short_ma_data.size()) {
+        info = QString(
+            "Time: %1\nPrice: $%2\nShort MA: $%3\nLong MA: $%4"
+        ).arg(static_cast<int>(x_data[closest_idx]))
+         .arg(y_data[closest_idx], 0, 'f', 2)
+         .arg(short_ma_data[closest_idx], 0, 'f', 2)
+         .arg(long_ma_data[closest_idx], 0, 'f', 2);
+    } else if (closest_idx < y_data.size()) {
+        info = QString(
+            "Time: %1\nValue: $%2"
+        ).arg(static_cast<int>(x_data[closest_idx]))
+         .arg(y_data[closest_idx], 0, 'f', 2);
+    }
+
+    return info;
+}
+
+void ChartWidget::on_point_hovered(const QPointF& point) {
+    QString info = format_point_info(point);
+
+    if (!info.isEmpty()) {
+        tooltip_label->setText(info);
+        tooltip_label->adjustSize();
+        QPoint globalPos = QCursor::pos();
+        QPoint localPos = mapFromGlobal(globalPos);
+        tooltip_label->move(localPos.x() + 10, localPos.y() + 10);
+        tooltip_label->show();
+        tooltip_label->raise();
+    } else {
+        tooltip_label->hide();
+    }
 }

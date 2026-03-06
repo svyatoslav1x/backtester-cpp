@@ -16,7 +16,10 @@ public:
 
 protected:
     void wheelEvent(QWheelEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
 
+signals:
+    void pointHovered(const QPointF& point);
 };
 
 class ChartWidget : public QWidget {
@@ -42,6 +45,10 @@ private:
     int data_point_counter;
 
     void update_metrics();
+    QString format_point_info(const QPointF& point);
+
+private slots:
+    void on_point_hovered(const QPointF& point);
 
 public:
     explicit ChartWidget(const QString& title, bool price_chart = false, QWidget* parent = nullptr);
