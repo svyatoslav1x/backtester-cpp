@@ -2,11 +2,14 @@
 #include <QTimer>
 #include <random>
 #include "ChartWidget.h"
+#include "BacktestWindow.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    ChartWidget window("Simulation", true);
+    BacktestWindow window;
+    window.setWindowTitle("Simulation");
+
     window.resize(1200, 800);
     window.show();
 
@@ -15,18 +18,20 @@ int main(int argc, char *argv[]) {
     std::normal_distribution<double> dist(0.0, 0.5);
 
     static double current_price = 150.0;
+    static double current_equity = 1000.0;
     static int time_step = 0;
     const int max_steps = 100;
 
     auto simulate_step = [&]() {
         current_price += dist(gen);
+        current_equity += dist(gen) * 10.0;
 
         double short_ma = current_price * 0.995 + (dist(gen) * 0.1);
         double long_ma = current_price * 0.985 + (dist(gen) * 0.2);
 
         window.add_data_point(time_step, current_price);
-
         window.add_ma_point(time_step, short_ma, long_ma);
+        window.add_equity_point(time_step, current_equity);
 
         time_step++;
     };

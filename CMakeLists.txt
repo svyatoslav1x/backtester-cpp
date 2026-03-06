@@ -16,6 +16,8 @@ set(SOURCES
         src/StrategyManager.h
         src/ChartWidget.cpp
         src/ChartWidget.h
+        src/BacktestWindow.cpp
+        src/BacktestWindow.h
 )
 
 add_executable(backtester-cpp ${SOURCES})
