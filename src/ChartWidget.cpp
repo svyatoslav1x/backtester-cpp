@@ -103,6 +103,16 @@ void ChartWidget::add_data_point(double x, double y) {
     update_metrics();
 }
 
+void ChartWidget::add_ma_point(double x, double short_ma, double long_ma) {
+    if (is_price_chart && short_ma > 0 && long_ma > 0) {
+        short_ma_series->append(x, short_ma);
+        long_ma_series->append(x, long_ma);
+        short_ma_data.push_back(short_ma);
+        long_ma_data.push_back(long_ma);
+    }
+}
+
+
 void ChartWidget::auto_scale() {
     if (x_data.empty() || y_data.empty()) return;
 

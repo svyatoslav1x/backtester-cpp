@@ -32,6 +32,8 @@ private:
 
     std::vector<double> x_data;
     std::vector<double> y_data;
+    std::vector<double> short_ma_data;
+    std::vector<double> long_ma_data;
 
     bool is_price_chart;
     int data_point_counter;
@@ -43,6 +45,7 @@ public:
     ~ChartWidget();
 
     void add_data_point(double x, double y);
+    void add_ma_point(double x, double short_ma, double long_ma);
     void auto_scale();
 };
 
