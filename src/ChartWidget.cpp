@@ -89,3 +89,83 @@ InteractiveChartView::InteractiveChartView(QChart* chart, QWidget* parent)
 }
 
 ChartWidget::~ChartWidget() {}
+
+void ChartWidget::add_data_point(double x, double y) {
+    x_data.push_back(x);
+    y_data.push_back(y);
+
+    main_series->append(x, y);
+
+    if (x_data.size() > 1) {
+        auto_scale();
+    }
+
+    update_metrics();
+}
+
+void ChartWidget::auto_scale() {
+    if (x_data.empty() || y_data.empty()) return;
+
+    double x_min = *std::min_element(x_data.begin(), x_data.end());
+    double x_max = *std::max_element(x_data.begin(), x_data.end());
+    double y_min = *std::min_element(y_data.begin(), y_data.end());
+    double y_max = *std::max_element(y_data.begin(), y_data.end());
+
+    double x_padding = (x_max - x_min) * 0.05;
+    double y_padding = (y_max - y_min) * 0.1;
+
+    if (x_padding == 0) x_padding = 1;
+    if (y_padding == 0) y_padding = 1;
+
+    axis_x->setRange(x_min - x_padding, x_max + x_padding);
+    axis_y->setRange(y_min - y_padding, y_max + y_padding);
+}
+
+void ChartWidget::update_metrics() {
+    if (y_data.empty()) {
+        metrics_label->setText("Metrics: No data");
+        return;
+    }
+
+    double current_value = y_data.back();
+    double min_value = *std::min_element(y_data.begin(), y_data.end());
+    double max_value = *std::max_element(y_data.begin(), y_data.end());
+    double avg_value = 0.0;
+    for (double val : y_data) {
+        avg_value += val;
+    }
+    avg_value /= y_data.size();
+
+    double variance = 0.0;
+    for (double val : y_data) {
+        variance += (val - avg_value) * (val - avg_value);
+    }
+    double volatility = std::sqrt(variance / y_data.size());
+
+    double change = 0.0;
+    if (y_data.size() > 1 && y_data.front() != 0) {
+        change = ((current_value - y_data.front()) / y_data.front()) * 100.0;
+    }
+
+    QString metrics_text;
+    if (is_price_chart) {
+        metrics_text = QString(
+            "Current: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | Vol: $%5 | Change: %6%"
+        ).arg(current_value, 0, 'f', 2)
+         .arg(min_value, 0, 'f', 2)
+         .arg(max_value, 0, 'f', 2)
+         .arg(avg_value, 0, 'f', 2)
+         .arg(volatility, 0, 'f', 2)
+         .arg(change, 0, 'f', 2);
+    } else {
+        metrics_text = QString(
+            "Portfolio: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | ROI: %5%"
+        ).arg(current_value, 0, 'f', 2)
+         .arg(min_value, 0, 'f', 2)
+         .arg(max_value, 0, 'f', 2)
+         .arg(avg_value, 0, 'f', 2)
+         .arg(change, 0, 'f', 2);
+    }
+
+    metrics_label->setText(metrics_text);
+}

@@ -30,12 +30,20 @@ private:
     QLabel* tooltip_label;
     QLabel* metrics_label;
 
+    std::vector<double> x_data;
+    std::vector<double> y_data;
+
     bool is_price_chart;
     int data_point_counter;
+
+    void update_metrics();
 
 public:
     explicit ChartWidget(const QString& title, bool price_chart = false, QWidget* parent = nullptr);
     ~ChartWidget();
+
+    void add_data_point(double x, double y);
+    void auto_scale();
 };
 
 #endif
