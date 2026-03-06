@@ -1,5 +1,7 @@
 ## Strategy description
 
+SharpRatio - сколько доходности стратегия приносит на единицу риска -> it is calculated afetr implementing the strategy
+
 The strategy coefficient is defined as:
 
 <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
