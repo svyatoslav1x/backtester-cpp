@@ -1,13 +1,12 @@
 #include <QApplication>
-#include "StrategyManager.h"
+#include "ChartWidget.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    StrategyManager window;
-    window.setWindowTitle("Backtester");
-    window.resize(1200, 800);
+    ChartWidget window("Price Chart", true);
 
+    window.resize(1000, 700);
     window.show();
 
     return app.exec();
