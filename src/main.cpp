@@ -41,6 +41,15 @@ int main(int argc, char *argv[]) {
     }
 
     QTimer timer;
+
+    QObject::connect(&window, &BacktestWindow::pauseToggled, [&](bool isPaused) {
+        if (isPaused) {
+            timer.stop();
+        } else {
+            timer.start(100);
+        }
+    });
+
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         if (time_step >= max_steps) {
             timer.stop();
