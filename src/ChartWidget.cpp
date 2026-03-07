@@ -44,9 +44,27 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
         long_ma_series->setName("Long MA");
         long_ma_series->setPen(QPen(QColor(244, 67, 54), 2));
         chart->addSeries(long_ma_series);
+
+        buy_markers = new QScatterSeries();
+        buy_markers->setName("Buy (Long)");
+        buy_markers->setColor(QColor(76, 175, 80));
+        buy_markers->setMarkerSize(15);
+        buy_markers->setMarkerShape(QScatterSeries::MarkerShapeTriangle);
+        buy_markers->setBorderColor(QColor(46, 125, 50));
+        chart->addSeries(buy_markers);
+
+        sell_markers = new QScatterSeries();
+        sell_markers->setName("Sell (Exit)");
+        sell_markers->setColor(QColor(244, 67, 54));
+        sell_markers->setMarkerSize(15);
+        sell_markers->setMarkerShape(QScatterSeries::MarkerShapeTriangle);
+        sell_markers->setBorderColor(QColor(198, 40, 40));
+        chart->addSeries(sell_markers);
     } else {
         short_ma_series = nullptr;
         long_ma_series = nullptr;
+        buy_markers = nullptr;
+        sell_markers = nullptr;
     }
 
     axis_x = new QValueAxis();
@@ -70,6 +88,11 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
         short_ma_series->attachAxis(axis_y);
         long_ma_series->attachAxis(axis_x);
         long_ma_series->attachAxis(axis_y);
+
+        buy_markers->attachAxis(axis_x);
+        buy_markers->attachAxis(axis_y);
+        sell_markers->attachAxis(axis_x);
+        sell_markers->attachAxis(axis_y);
     }
 
     chart->legend()->setAlignment(Qt::AlignBottom);
@@ -248,5 +271,15 @@ void ChartWidget::on_point_hovered(const QPointF& point) {
         tooltip_label->raise();
     } else {
         tooltip_label->hide();
+    }
+}
+
+void ChartWidget::add_signal_marker(double x, double y, bool is_buy) {
+    if (is_price_chart) {
+        if (is_buy) {
+            buy_markers->append(x, y);
+        } else {
+            sell_markers->append(x, y);
+        }
     }
 }

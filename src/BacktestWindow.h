@@ -20,6 +20,7 @@ public:
     void add_equity_point(double x, double y);
 
     void set_simulation_finished(const QString& stats);
+    void add_signal_marker(double x, double y, bool is_buy);
 
 signals:
     void pauseToggled(bool paused);

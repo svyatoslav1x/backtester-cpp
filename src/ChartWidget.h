@@ -7,6 +7,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChart>
+#include <QtCharts/QScatterSeries>
 
 class InteractiveChartView : public QChartView {
     Q_OBJECT
@@ -35,6 +36,8 @@ private:
     QValueAxis* axis_y;
     QLabel* tooltip_label;
     QLabel* metrics_label;
+    QScatterSeries* buy_markers;
+    QScatterSeries* sell_markers;
 
     std::vector<double> x_data;
     std::vector<double> y_data;
@@ -57,6 +60,7 @@ public:
     void add_data_point(double x, double y);
     void add_ma_point(double x, double short_ma, double long_ma);
     void auto_scale();
+    void add_signal_marker(double x, double y, bool is_buy);
 };
 
 #endif

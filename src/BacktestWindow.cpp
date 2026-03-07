@@ -46,6 +46,8 @@ BacktestWindow::BacktestWindow(QWidget *parent)
     main_layout->addWidget(stacked_widget);
 }
 
+BacktestWindow::~BacktestWindow() {}
+
 void BacktestWindow::add_data_point(double x, double y) {
     price_chart->add_data_point(x, y);
 }
@@ -136,4 +138,6 @@ void BacktestWindow::set_simulation_finished(const QString& stats) {
     );
 }
 
-BacktestWindow::~BacktestWindow() {}
+void BacktestWindow::add_signal_marker(double x, double y, bool is_buy) {
+    price_chart->add_signal_marker(x, y, is_buy);
+}
