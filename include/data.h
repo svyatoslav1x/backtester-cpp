@@ -1,123 +1,87 @@
 #pragma once
+
+#include <algorithm>
 #include <chrono>
+#include <iomanip>
+#include <memory>
+#include <queue>
 #include <string>
-#include<vector>
+#include <unordered_map>
+#include <vector>
+
 #include "csv_reader.h"
 #include "event.h"
-#include <unordered_map>
 
 struct Bar {
-    std::chrono::system_clock::time_point datetime;
-    double open;
-    double high;
-    double low;
-    double close;
-    double volume;
+	std::chrono::system_clock::time_point datetime;
+	double open;
+	double high;
+	double low;
+	double close;
+	double volume;
 };
 
 class DataHandler {
 public:
-    virtual ~DataHandler() = default;
+	virtual ~DataHandler() = default;
 
-    // The last N bars by symbol
-    virtual std::vector<Bar> get_latest_bars(
-        const std::string& symbol,
-        std::size_t N = 1
-    ) const = 0;
+	// Returns the last N bars by symbol which has been proccessed
+	// BY the current heartbeat timestamp
+	virtual std::vector<Bar> get_latest_bars(const std::string& symbol, std::size_t N = 1) const = 0;
 
-    // Heartbeat
-    virtual void update_bars() = 0;
+	// This where MarketEvents are generated and pushed into the event queue
+	virtual void update_bars() = 0;
 
-    // Are there any other data
-    virtual bool continue_backtest() const = 0;
+	// Are there any data in CSV files left to process?
+	virtual bool if_continue_backtest() const = 0;
+
+	// Returns the list of symbols being tracked
+	virtual std::vector<std::string> get_symbols() const = 0;
 };
 
+// Handles historical CSV data for equities in an
+// Open-Low-High-Close-Volume-OpenInterest set of bars
+class HistoricCSVDataHandler : public DataHandler {
+	// HistoricCSVDataHandler is designed to read CSV files for
+	// each requested symbol from 'symbol_list' and provide an interface
+	// to obtain the "latest" bar in a manner identical to a live
+	// trading interface.
+	//
+	// It will be assumed that all CSV files names are of the form
+	// 'symbol.csv', where 'symbol' is a string from the symbol_list.
+	//
+	// It will be assumed that each CSV file is sorted by date
+	// in ascending order.
 
-class HistoricCSVDataHandler : DataHandler {
-    // HistoricCSVDataHandler is designed to read CSV files for
-    // each requested symbol from disk and provide an interface
-    // to obtain the "latest" bar in a manner identical to a live
-    // trading interface.
-    std::queue<std::unique_ptr<Event>>& events; // events in queue (Market, Signal, Order, Fill)
-    std::string csv_dir; //the name of a market
-    std::vector<std::string> symbols; //the list of target goods
+	std::queue<std::unique_ptr<Event>>& events; // the event queue of the backtester
+	std::string csv_dir; // the absolute directory path of the CSV files (without trailing slash '/')
+	std::vector<std::string> symbol_list; // the list of target goods
 
-    std::unordered_map<std::string, std::vector<Bar>> symbol_data; //all data from database
-    std::unordered_map<std::string, std::vector<Bar>> latest_symbol_data; // shown data for user
+	// all data from the CSV files for each symbol
+	std::unordered_map<std::string, std::vector<Bar>> symbol_data;
+	std::unordered_map<std::string, std::vector<Bar>> latest_symbol_data; // shown data for user
 
-    std::size_t current_index = 0; // track the time from given market
-    bool continue_flag = true; // check whether here any other data to control when to finish
+	// 'current_index' is used to track the current position in the symbol_data for each symbol
+	// meaning the number of lines in each CSV file should be the same!!!
+	std::size_t current_index = 0; // track the time
+	bool continue_backtest = true; // check whether here any other data to control when to finish
 
-    void open_and_parse_csv() {
-        for (const auto& symbol : symbols) {
-            std::ifstream file(csv_dir + "/" + symbol + ".csv");
-            if (!file.is_open()) {
-                throw std::runtime_error("Cannot open CSV file for " + symbol);
-            }
+	// Helper to safely convert strings with missing data
+	double safe_stod(const std::string& s) const;
 
-            CSVreader reader;
-            file >> reader;
+	// system_clock - истемные часы
+	// time_point - конкретная точка во времени
+	// time_t - работает конкретно со временем из mktime и есть возможность измерить duration
+	std::chrono::system_clock::time_point parse_datetime(const std::string& dt) const;
 
-            // Skip header
-            for (std::size_t i = 1; i < reader.data.size(); ++i) {
-                const auto& row = reader.data[i];
-                if (row.size() < 7) continue;
-
-                Bar bar;
-                bar.symbol = symbol;
-                bar.datetime = parse_datetime(row[0]);
-                bar.open   = std::stod(row[1]);
-                bar.high   = std::stod(row[2]);
-                bar.low    = std::stod(row[3]);
-                bar.close  = std::stod(row[4]);
-                bar.volume = std::stod(row[6]);
-
-                symbol_data[symbol].push_back(bar);
-            }
-
-            latest_symbol_data[symbol] = {};
-        }
-    }
-    //sustem_clock - истемные часы
-    //time_point - конкретная точка во времени
-    //time_t - работает конкретно со временем из mktime и есть возможность измерить duration
-    std::chrono::system_clock::time_point parse_datetime(const std::string& dt) {
-        std::tm tm{};
-        std::stringstream ss(dt);
-        ss >> std::get_time(&tm, "%Y-%m-%d");
-        return std::chrono::system_clock::from_time_t(std::mktime(&tm));
-    }
+	void open_and_parse_csv();
 public:
-    HistoricCSVDataHandler(
-        std::queue<std::unique_ptr<Event>>& events_,
-        const std::string& csv_dir_,
-        const std::vector<std::string>& symbols_
-    )
-        : events(events_), csv_dir(csv_dir_), symbols(symbols_) {
-        open_and_parse_csv();
-    }
+	HistoricCSVDataHandler(std::queue<std::unique_ptr<Event>>& events_,
+						   const std::string& csv_dir_,
+						   const std::vector<std::string>& symbol_list_);
 
-    void update_bars() override {
-        for (const auto& symbol : symbols) {
-            if (current_index >= symbol_data[symbol].size()) {
-                continue_flag = false;
-                return;
-            }
-
-            latest_symbol_data[symbol].push_back(
-                symbol_data[symbol][current_index]
-            );
-        }
-
-        ++current_index;
-        events.push(std::make_unique<MarketEvent>());
-    }
-    std::vector<Bar> get_latest_bars (const std::string& symbol, std::size_t N) const override {
-        const auto& bars = latest_symbol_data.at(symbol);
-        if (bars.size() < N) return bars;
-        return {bars.end() - N, bars.end()};
-    }
-    bool continue_backtest() const override {
-        return continue_flag;
-    }
+	void update_bars() override;
+	std::vector<Bar> get_latest_bars(const std::string& symbol, std::size_t N) const override;
+	bool if_continue_backtest() const override;
+	std::vector<std::string> get_symbols() const override;
 };

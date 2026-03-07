@@ -1,3 +1,9 @@
+# User-specific
+.zed
+*.h.txt
+prompt.txt
+description.txt
+
 # Prerequisites
 *.d
 
