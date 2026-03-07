@@ -53,6 +53,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         if (time_step >= max_steps) {
             timer.stop();
+            window.set_simulation_finished("Final Equity: $" + QString::number(current_equity, 'f', 2));
             return;
         }
         simulate_step();
