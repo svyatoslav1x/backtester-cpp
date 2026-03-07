@@ -13,20 +13,20 @@
 #include <vector>
 
 inline const std::vector<QColor> colors = {
-    QColor(30, 64, 175), // 0 blue
-    QColor(245, 247, 250), // 1 darker white
-    QColor(148, 163, 184), // 2 gray
-    QColor(17, 24, 39), // 3 almost black text
-    QColor(232, 240, 234), // 4 green-white
-    QColor(220, 230, 223), // 5 whitish
-    QColor(250, 255, 255), // 6 white
+    QColor(30, 64, 175),   // 0 deep blue
+    QColor(245, 247, 250), // 1 cool white
+    QColor(148, 163, 184), // 2 muted gray
+    QColor(17, 24, 39),    // 3 near-black
+    QColor(232, 240, 234), // 4 soft mist
+    QColor(220, 230, 223), // 5 pale
+    QColor(250, 255, 255), // 6 icy white
     QColor(120, 138, 126), // 7 gray
-    QColor(71, 85, 105), // 8 dark blue
-    QColor(245, 247, 250), // 9 whitish
-    QColor(37, 99, 235), // 10 blue
-    QColor(30, 64, 175), // 11 darker blue
-    QColor(240, 244, 248), // todo: add better description for each color
-    QColor(236, 241, 246) // todo: add some kind of examples maybe (?)
+    QColor(71, 85, 105),   // 8 deep blue
+    QColor(245, 247, 250), // 9 light gray-white
+    QColor(37, 99, 235),   // 10 vivid blue
+    QColor(30, 64, 175),   // 11 strong blue
+    QColor(240, 244, 248), // 12 pale
+    QColor(236, 241, 246)  // 13 soft blue-gray
 };
 
 inline QColor transparentBlack(int transparent) {

@@ -71,12 +71,6 @@ void StartScreen::buildUi() {
     main_layout->addLayout(button_layout);
 }
 
-void StartScreen::setNewsHtml(const QString &html) {
-    if (news_display) {
-        news_display->setHtml(html);
-    }
-}
-
 void StartScreen::setNewsText(const QString &text) {
     if (news_display) {
         news_display->setPlainText(text);

@@ -5,6 +5,12 @@
 #include <QMainWindow>
 #include <QPointer>
 #include <QScreen>
+#include <QNetworkAccessManager>
+
+#include "screens/start_screen.h"
+#include "screens/select_strategy_screen.h"
+#include "screens/create_strategy_screen.h"
+#include "screens/done_screen.h"
 
 class QStackedWidget;
 class QWidget;
@@ -20,12 +26,18 @@ public:
 private:
     // screens
     QPointer<QStackedWidget> stacked_widget;
-    QPointer<QWidget> start_screen;
+
+    QPointer<StartScreen> start_screen;
+    QPointer<SelectStrategyScreen> select_strategy_screen;
+    QPointer<CreateStrategyScreen> create_strategy_screen;
+    QPointer<DoneScreen> done_screen;
+
+    // todo: change after linked with nikita
     QPointer<QWidget> strategy_screen;
-    QPointer<QWidget> create_strategy_screen;
-    QPointer<QWidget> select_strategy_screen;
     QPointer<QWidget> backtest_screen;
-    QPointer<QWidget> done_screen;
+
+    QPointer<QNetworkAccessManager> network_manager;
+    QDateTime last_news_refresh;
 };
 
 #endif //MAIN_WINDOW

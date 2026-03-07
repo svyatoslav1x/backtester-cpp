@@ -14,8 +14,6 @@ class StartScreen : public QWidget {
 public:
     explicit StartScreen(QWidget *parent = nullptr);
 
-    void setNewsHtml(const QString &html);
-
     void setNewsText(const QString &text);
 
     void setDatasets(const QStringList &names);

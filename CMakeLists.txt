@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Gui)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
 
 set(SOURCES
         src/main.cpp
@@ -23,4 +23,9 @@ set(SOURCES
 
 add_executable(Backtester ${SOURCES})
 
-target_link_libraries(Backtester PRIVATE Qt6::Widgets Qt6::Gui)
+target_link_libraries(Backtester PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Network
+)
