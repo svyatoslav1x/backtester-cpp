@@ -1,6 +1,5 @@
 #include "create_strategy_screen.h"
 #include "style.h"
-#include <QSizePolicy>
 
 CreateStrategyScreen::CreateStrategyScreen(QWidget *parent) : QWidget(parent) {
     buildUi();
@@ -35,6 +34,9 @@ void CreateStrategyScreen::buildUi() {
     setComboStyle(strategy_type_combo, colors[6], colors[3], 11, false);
     layout->addWidget(strategy_type_combo);
 
+    strategy_type_combo->addItem("MovingAveragesLongStrategy");
+    strategy_type_combo->addItem("StopLossStrategy");
+
     params_label = new QLabel("Strategy Parameters", this); // text to introduce changes of parameters
     setLabelStyle(params_label, colors[10], 13, true);
     layout->addWidget(params_label, 0, Qt::AlignCenter);
@@ -48,9 +50,9 @@ void CreateStrategyScreen::buildUi() {
     setLabelStyle(short_label, colors[3], 11, false);
     short_layout->addWidget(short_label);
 
-    short_window_spin = new QSpinBox(this); // qspinbox for short
-    short_window_spin->setRange(5, 100);
-    short_window_spin->setValue(20);
+    short_window_spin = new MouseOnlySpinBox(this); // qspinbox for short
+    short_window_spin->setRange(5, 50);
+    short_window_spin->setValue(12);
     short_window_spin->setMinimumHeight(42);
     short_window_spin->setFixedWidth(120);
     short_window_spin->setAlignment(Qt::AlignCenter);
@@ -69,8 +71,8 @@ void CreateStrategyScreen::buildUi() {
     setLabelStyle(long_label, colors[3], 11, false);
     long_layout->addWidget(long_label);
 
-    long_window_spin = new QSpinBox(this); // qspinbox for long
-    long_window_spin->setRange(25, 150);
+    long_window_spin = new MouseOnlySpinBox(this); // qspinbox for long
+    long_window_spin->setRange(20, 250);
     long_window_spin->setValue(50);
     long_window_spin->setMinimumHeight(42);
     long_window_spin->setFixedWidth(120);
@@ -78,8 +80,49 @@ void CreateStrategyScreen::buildUi() {
     setEditStyle(long_window_spin, QColor(240, 244, 248), colors[3], colors[2], 11, true);
     long_layout->addWidget(long_window_spin);
 
+    connect(short_window_spin, qOverload<int>(&QSpinBox::valueChanged), this, [this](int shortValue) {
+        if (long_window_spin->minimum() <= shortValue) {
+            long_window_spin->setMinimum(shortValue + 1);
+        }
+        if (long_window_spin->value() <= shortValue) {
+            long_window_spin->setValue(shortValue + 1);
+        }
+    });
+
+    connect(long_window_spin, qOverload<int>(&QSpinBox::valueChanged), this, [this](int longValue) {
+        short_window_spin->setMaximum(longValue - 1);
+        if (short_window_spin->value() >= longValue) {
+            short_window_spin->setValue(longValue - 1);
+        }
+    });
+    long_window_spin->setMinimum(short_window_spin->value() + 1);
+    short_window_spin->setMaximum(long_window_spin->value() - 1);
+
     long_layout->addStretch();
     layout->addLayout(long_layout);
+
+    stop_loss_layout = new QHBoxLayout();
+    stop_loss_layout->addStretch();
+
+    stop_loss_label = new QLabel("Stop Loss Percentage:", this);
+    stop_loss_label->setMinimumWidth(280);
+    stop_loss_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    setLabelStyle(stop_loss_label, colors[3], 11, false);
+    stop_loss_layout->addWidget(stop_loss_label);
+
+    stop_loss_spin = new MouseOnlyDoubleSpinBox(this);
+    stop_loss_spin->setRange(0.80, 0.99);
+    stop_loss_spin->setSingleStep(0.01);
+    stop_loss_spin->setDecimals(2);
+    stop_loss_spin->setValue(0.95);
+    stop_loss_spin->setMinimumHeight(42);
+    stop_loss_spin->setFixedWidth(120);
+    stop_loss_spin->setAlignment(Qt::AlignCenter);
+    setEditStyle(stop_loss_spin, colors[12], colors[3], colors[2], 11, true);
+    stop_loss_layout->addWidget(stop_loss_spin);
+
+    stop_loss_layout->addStretch();
+    layout->addLayout(stop_loss_layout);
 
     info_label = new QLabel(
         "Tips:\n"
@@ -116,7 +159,14 @@ void CreateStrategyScreen::buildUi() {
     button_layout->addWidget(save_button);
 
     layout->addLayout(button_layout);
-    layout->addStretch(); // todo: consider what is actually better, for it to be horizontally fixed or not
+
+    connect(strategy_type_combo, &QComboBox::currentTextChanged, this, [this] {
+        updateParameterVisibility();
+    });
+
+    updateParameterVisibility();
+
+    layout->addStretch();
 }
 
 CreateStrategyInput CreateStrategyScreen::input() const {
@@ -133,6 +183,9 @@ CreateStrategyInput CreateStrategyScreen::input() const {
     if (long_window_spin) {
         out.longWindow = long_window_spin->value();
     }
+    if (stop_loss_spin) {
+        out.stopLossPercentage = stop_loss_spin->value();
+    }
     return out;
 }
 
@@ -140,10 +193,54 @@ void CreateStrategyScreen::resetForm() {
     if (strategy_name_edit) {
         strategy_name_edit->clear();
     }
+    if (strategy_type_combo) {
+        strategy_type_combo->setCurrentText("MovingAveragesLongStrategy");
+    }
     if (short_window_spin) {
         short_window_spin->setValue(20);
     }
     if (long_window_spin) {
         long_window_spin->setValue(50);
+    }
+    if (stop_loss_spin) {
+        stop_loss_spin->setValue(0.90);
+    }
+
+    updateParameterVisibility();
+}
+
+void CreateStrategyScreen::updateParameterVisibility() {
+    const QString type = strategy_type_combo ? strategy_type_combo->currentText() : "";
+
+    const bool isMovingAverage = (type == "MovingAveragesLongStrategy");
+    const bool isStopLoss = (type == "StopLossStrategy");
+
+    short_label->setVisible(isMovingAverage);
+    short_window_spin->setVisible(isMovingAverage);
+
+    long_label->setVisible(isMovingAverage);
+    long_window_spin->setVisible(isMovingAverage);
+
+    stop_loss_label->setVisible(isStopLoss);
+    stop_loss_spin->setVisible(isStopLoss);
+
+    if (info_label) {
+        if (isMovingAverage) {
+            info_label->setText(
+                "Tips:\n"
+                "• Short window: reacts faster to price changes\n"
+                "• Long window: confirms the broader trend\n"
+                "• Golden Cross: buy signal (Short crosses above Long)\n"
+                "• Death Cross: sell signal (Short crosses below Long)"
+            );
+        } else if (isStopLoss) {
+            info_label->setText(
+                "Tips:\n"
+                "• Stop loss percentage is stored as a fraction\n"
+                "• Example: 0.90 means exit around 10% below price\n"
+                "• Higher values trail more tightly\n"
+                "• Lower values give the trade more room"
+            );
+        }
     }
 }

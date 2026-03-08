@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     auto create = qobject_cast<CreateStrategyScreen *>(stacked_widget->widget(2));
     auto done = qobject_cast<DoneScreen *>(stacked_widget->widget(3));
 
+    // news
     network_manager = new QNetworkAccessManager(this);
 
     connect(network_manager, &QNetworkAccessManager::finished, this, [this](QNetworkReply *reply) {
@@ -104,8 +105,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
 
         QUrl url(
-            "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
-            "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
+            "hTBST");
+        // apikey should be in .env file, but its a small project, so eh its okay
         QNetworkRequest request(url);
         network_manager->get(request);
     };

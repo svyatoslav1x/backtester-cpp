@@ -1,7 +1,7 @@
 #ifndef GUI_MAIN_WINDOW_CREATE_STRATEGY_SCREEN_H
 #define GUI_MAIN_WINDOW_CREATE_STRATEGY_SCREEN_H
 
-#include <QTextEdit>
+#include <QKeyEvent>
 #include <QPointer>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -15,8 +15,9 @@ struct CreateStrategyInput {
     QString type;
     int shortWindow = 20;
     int longWindow = 50;
+    double stopLossPercentage = 0.90;
+    // todo: add svyat's strategy
 };
-
 
 class CreateStrategyScreen : public QWidget {
     Q_OBJECT
@@ -27,6 +28,8 @@ public:
     CreateStrategyInput input() const;
 
     void resetForm();
+
+    void updateParameterVisibility();
 
 private:
     void buildUi();
@@ -53,9 +56,34 @@ private:
     QPointer<QPushButton> back_button;
     QPointer<QPushButton> save_button;
 
+    QPointer<QLabel> stop_loss_label;
+    QPointer<QDoubleSpinBox> stop_loss_spin;
+    QPointer<QHBoxLayout> stop_loss_layout;
+
 signals:
     void StartScreenSwitch();
 };
 
+// extended qspinbox class that doesn't allow keyboard
+class MouseOnlySpinBox : public QSpinBox {
+public:
+    using QSpinBox::QSpinBox;
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override {
+        event->ignore();
+    }
+};
+
+// extended qdoublespinbox class that doesn't allow keyboard
+class MouseOnlyDoubleSpinBox : public QDoubleSpinBox {
+public:
+    using QDoubleSpinBox::QDoubleSpinBox;
+
+protected:
+    void keyPressEvent(QKeyEvent *event) override {
+        event->ignore();
+    }
+};
 
 #endif //GUI_MAIN_WINDOW_CREATE_STRATEGY_SCREEN_H
