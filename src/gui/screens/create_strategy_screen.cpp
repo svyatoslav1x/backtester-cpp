@@ -152,9 +152,8 @@ void CreateStrategyScreen::buildUi() {
     save_button = new QPushButton("Save and Use", this); // button to save and get back to main screen
     save_button->setMinimumSize(150, 42);
     setButtonStyle(save_button, colors[0], colors[1], 11, true);
-    // todo: logic for adding a strategy
     connect(save_button, &QPushButton::clicked, this, [this] {
-        emit StartScreenSwitch();
+        emit saveStrategyRequested(input());
     });
     button_layout->addWidget(save_button);
 
@@ -197,13 +196,13 @@ void CreateStrategyScreen::resetForm() {
         strategy_type_combo->setCurrentText("MovingAveragesLongStrategy");
     }
     if (short_window_spin) {
-        short_window_spin->setValue(20);
+        short_window_spin->setValue(12);
     }
     if (long_window_spin) {
         long_window_spin->setValue(50);
     }
     if (stop_loss_spin) {
-        stop_loss_spin->setValue(0.90);
+        stop_loss_spin->setValue(0.95);
     }
 
     updateParameterVisibility();

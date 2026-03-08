@@ -36,6 +36,16 @@ private:
     QPointer<QWidget> strategy_screen;
     QPointer<QWidget> backtest_screen;
 
+    void seedStrategiesIfNeeded();
+
+    void refreshStrategyList();
+
+    void loadDatasets();
+
+    bool saveAppState(const QString &dataset, int strategyId);
+
+    QString currentSelectedDataset;
+
     QPointer<QNetworkAccessManager> network_manager;
     QDateTime last_news_refresh;
 };

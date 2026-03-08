@@ -62,6 +62,8 @@ private:
 
 signals:
     void StartScreenSwitch();
+
+    void saveStrategyRequested(const CreateStrategyInput &input);
 };
 
 // extended qspinbox class that doesn't allow keyboard

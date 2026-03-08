@@ -54,7 +54,7 @@ void StartScreen::buildUi() {
     });
     setButtonStyle(create_strategy_button, colors[0], colors[1], 11, true);
 
-    start_button = new QPushButton("Start Backtest", this); // button to start backtest
+    start_button = new QPushButton("Select Strategy", this); // button to start backtest
     start_button->setMinimumHeight(42);
     start_button->setMinimumWidth(140);
     connect(start_button, &QPushButton::clicked, this, [this] {
