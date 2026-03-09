@@ -12,12 +12,14 @@ set(CMAKE_AUTOUIC ON)
 
 set(SOURCES
         src/main.cpp
-        src/StrategyManager.cpp
-        src/StrategyManager.h
-        src/ChartWidget.cpp
-        src/ChartWidget.h
-        src/BacktestWindow.cpp
-        src/BacktestWindow.h
+        src/gui/screens/StrategyManager.cpp
+        src/gui/screens/StrategyManager.h
+        src/gui/screens/ChartWidget.cpp
+        src/gui/screens/ChartWidget.h
+        src/gui/screens/BacktestWindow.cpp
+        src/gui/screens/BacktestWindow.h
+        src/gui/screens/SimulationEngine.cpp
+        src/gui/screens/SimulationEngine.h
 )
 
 add_executable(backtester-cpp ${SOURCES})
