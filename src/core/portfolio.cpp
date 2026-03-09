@@ -1,10 +1,9 @@
 #include "../../include/portfolio.h"
-#include "../../include/perfomance.h"
+#include "../../include/performance.h"
 
 #include <cmath>
 #include <iomanip>
 #include <sstream>
-#include <stdexcept>
 
 NaivePortfolio::NaivePortfolio(DataHandler& data,
 							   std::queue<std::unique_ptr<Event>>& events,
@@ -182,10 +181,9 @@ std::vector<std::pair<std::string, std::string>> NaivePortfolio::summary_stats()
 		prev_total = hr.total;
 	}
 
-	std::vector<double> zero_benchmark(period_returns.size(), 0.0);
-	double sharpe_ratio = performance::create_sharpe_ratio(period_returns, zero_benchmark, 252.0);
+	double sharpe_ratio = performance::calculate_sharpe_ratio(period_returns, 252);
 
-	auto [max_dd, dd_duration] = performance::create_drawdowns(equity_curve);
+	auto [max_dd, dd_duration] = performance::calculate_drawdowns(equity_curve);
 
 	double total_return_pct = ((equity_curve.back() / initial_capital) - 1.0) * 100.0;
 	double max_dd_pct = (max_dd / initial_capital) * 100.0; // estimate percentage format
