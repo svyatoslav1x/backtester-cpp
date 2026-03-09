@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QStackedWidget>
+#include <QPointer>
 
 class ChartWidget;
 
@@ -33,23 +34,22 @@ private slots:
 private:
     void create_done_screen();
 
-    QStackedWidget* stacked_widget;
-    QWidget* charts_view;
-    QWidget* done_screen;
+    QPointer<QStackedWidget> stacked_widget;
+    QPointer<QWidget> charts_view;
+    QPointer<QWidget> done_screen;
 
-    ChartWidget* equity_chart;
-    ChartWidget* price_chart;
+    QPointer<ChartWidget> equity_chart;
+    QPointer<ChartWidget> price_chart;
 
-    QPushButton* pause_button;
-    QPushButton* show_results_button;
-    QPushButton* back_to_charts_button;
-    QLabel* results_label;
+    QPointer<QPushButton> pause_button;
+    QPointer<QPushButton> show_results_button;
+    QPointer<QPushButton> back_to_charts_button;
+    QPointer<QLabel> results_label;
 
     double current_price;
     double current_equity;
 
     bool is_paused = false;
 };
-
 
 #endif
