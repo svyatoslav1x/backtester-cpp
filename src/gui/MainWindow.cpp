@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     double w = screenSize.width();
     double h = screenSize.height();
     resize(static_cast<int>(w * 0.69), static_cast<int>(h * 0.67)); // funny numbers
-    setMinimumSize(760, 520); // shouldn't be smaller than this, because to some screens its vital
+    setMinimumSize(1300, 800); // shouldn't be smaller than this, because to some screens its vital
 
     gradient = QLinearGradient(0, 0, w, h); // a gradient from one smooth gray to another
     gradient.setColorAt(0.0, QColor(239, 239, 240)); // #EFEFF0 color, changed to RGB for efficiency
