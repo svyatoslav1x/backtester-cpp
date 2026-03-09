@@ -52,6 +52,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     stacked_widget->addWidget(select_strategy_screen); // 1 - select_strategy_screen
     stacked_widget->addWidget(create_strategy_screen); // 2 - create_strategy_screen
     stacked_widget->addWidget(done_screen); // 3 - done_screen
+    stacked_widget->addWidget(edit_strategy_screen); // 4 - edit strategy screen
+    stacked_widget->addWidget(backtest_screen); // 5 - charts screen
 
     stacked_widget->setCurrentIndex(0); // the first screen is the starting one
     setCentralWidget(stacked_widget); // makes the stacket_widget the main widget for the window

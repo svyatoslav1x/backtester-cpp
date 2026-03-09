@@ -5,10 +5,12 @@
 #include <QNetworkAccessManager>
 #include <QStackedWidget>
 
+#include "screens/BacktestWindow.h"
 #include "screens/create_strategy_screen.h"
 #include "screens/done_screen.h"
 #include "screens/select_strategy_screen.h"
 #include "screens/start_screen.h"
+#include "screens/StrategyManager.h"
 
 class QWidget;
 
@@ -43,8 +45,8 @@ private:
     QPointer<SelectStrategyScreen> select_strategy_screen;
     QPointer<CreateStrategyScreen> create_strategy_screen;
     QPointer<DoneScreen> done_screen;
-    QPointer<QWidget> strategy_screen; // todo:: should be fixed to nikita's class
-    QPointer<QWidget> backtest_screen; // todo:: should be fixed to nikita's class
+    QPointer<StrategyManager> edit_strategy_screen;
+    QPointer<BacktestWindow> backtest_screen;
     QPointer<QStackedWidget> stacked_widget;
 
     // different helpers
