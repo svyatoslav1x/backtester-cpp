@@ -2,16 +2,15 @@
 
 #include <vector>
 #include <string>
-#include <unordered_map>
 #include <queue>
 #include <memory>
 #include <cmath>
 
 #include "strategy.h"
-#include "event.h"
-#include "signal_event.h"
-#include "data_handler.h"
-#include "portfolio.h"
+#include "include/event.h"
+#include "include/event.h"
+#include "include/data.h"
+#include "include/portfolio.h"
 
 class MovingAveragesLongStrategy : public Strategy
 {
@@ -26,14 +25,13 @@ private:
     int short_period;
     int long_period;
 
-    std::unordered_map<std::string, bool> bought;
-
 public:
 
     MovingAveragesLongStrategy(
         DataHandler& data_,
         std::queue<std::unique_ptr<Event>>& events_,
         Portfolio& portfolio_,
+        const std::vector<std::string>& symbols_,
         int short_period_,
         int long_period_
     )
@@ -41,14 +39,10 @@ public:
         data(data_),
         events(events_),
         portfolio(portfolio_),
+        symbol_list(symbols_),
         short_period(short_period_),
         long_period(long_period_)
-    {
-        symbol_list = data.get_symbols();
-
-        for (const auto& s : symbol_list)
-            bought[s] = false;
-    }
+    {}
 
 private:
 
@@ -78,7 +72,8 @@ public:
 
         for (const auto& symbol : symbol_list)
         {
-            auto bars = data.get_latest_data(symbol);
+            // берём последние long_period баров
+            auto bars = data.get_latest_bars(symbol, long_period);
 
             if (bars.size() < long_period)
                 continue;
@@ -93,7 +88,9 @@ public:
 
             double price = prices.back();
 
-            if (!bought[symbol] && short_ema > long_ema)
+            // open
+            if (portfolio.get_position(symbol) == 0 &&
+                short_ema > long_ema)
             {
                 int quantity =
                     std::floor(portfolio.get_cash() / price);
@@ -101,15 +98,16 @@ public:
                 events.push(
                     std::make_unique<SignalEvent>(
                         symbol,
-                        SignalDirection::LONG,
+                        bars[bars.size() - 1].datetime,
+                        "LONG",
                         quantity
                     )
                 );
-
-                bought[symbol] = true;
             }
 
-            else if (bought[symbol] && short_ema < long_ema)
+            //close
+            else if (portfolio.get_position(symbol) > 0 &&
+                short_ema < long_ema)
             {
                 int quantity =
                     portfolio.get_position(symbol);
@@ -117,12 +115,11 @@ public:
                 events.push(
                     std::make_unique<SignalEvent>(
                         symbol,
-                        SignalDirection::EXIT,
+                        bars[bars.size() - 1].datetime,
+                        "EXIT",
                         quantity
                     )
                 );
-
-                bought[symbol] = false;
             }
         }
     }

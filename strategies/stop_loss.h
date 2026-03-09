@@ -7,125 +7,110 @@
 #include <cmath>
 
 #include "strategy.h"
-#include "data_handler.h"
-#include "portfolio.h"
-#include "event.h"
-#include "signal_event.h"
+#include "include/data.h"
+#include "include/portfolio.h"
+#include "include/event.h"
+#include "include/event.h"
+
+//Стоп - лосс(англ.stop loss) — это отложенный приказ брокеру закрыть сделку с убытком на определённом уровне цены.
+// Цель — ограничить убытки, если рынок разворачивается против позиции.
+
 
 class StopLossStrategy : public Strategy {
-private:
-
-    DataHandler& data;
-    std::queue<std::unique_ptr<Event>>& events;
+    DataHandler& data; // market data
+    std::queue<std::unique_ptr<Event>>& events; //events queue
     Portfolio& portfolio;
+    std::vector<std::string> symbol_list; //the list of trading objects
+    std::unordered_map<std::string, double> stop_loss; //the level of stop-loss for each object
+    double stop_loss_percentage; // when to sell
 
-    std::vector<std::string> symbol_list;
-
-    std::unordered_map<std::string, bool> bought;
-    std::unordered_map<std::string, double> stop_loss;
-
-    double stop_loss_percentage;
-
-    void initialize_bought() {
-        for (const auto& symbol : symbol_list)
-            bought[symbol] = false;
-    }
     void initialize_stop_loss() {
         for (const auto& symbol : symbol_list)
-            stop_loss[symbol] = stop_loss_percentage;
+            stop_loss[symbol] = 0.0;
     }
-
 public:
 
-    DataHandler& data_,
+    StopLossStrategy(
+        DataHandler& data_,
         std::queue<std::unique_ptr<Event>>& events_,
         Portfolio& portfolio_,
+        const std::vector<std::string>& symbols_,
         double stop_loss_percentage_
-        )
-        : data(data_),
+    )
+        :
+        data(data_),
         events(events_),
         portfolio(portfolio_),
+        symbol_list(symbols_),
         stop_loss_percentage(stop_loss_percentage_)
-        {
-            symbol_list = data.get_symbols();
+    {
+        initialize_stop_loss();
+    }
 
-            initialize_bought();
-            initialize_stop_loss();
-        }
+    void calculate_signals(const Event& event) override {
+        if (event.type() != EventType::MARKET)
+            return;
 
-        void calculate_signals(const Event& event) override {
-            if (event.type() != EventType::MARKET)
-                return;
+        for (const auto& symbol : symbol_list) {
 
-            for (const auto& symbol : symbol_list) {
+            auto bars = data.get_latest_bars(symbol, 2);
 
-                auto data_vec = data.get_latest_data(symbol);
+            if (bars.empty())
+                continue;
+            double latest_close = bars.back().close;
 
-                if (data_vec.empty())
-                    continue;
+            // to open LONG
+            if (!portfolio.get_position(symbol) &&
+                latest_close > stop_loss[symbol] / stop_loss_percentage)
+            {
+                int quantity =
+                    std::floor(
+                        portfolio.get_cash() / latest_close
+                    ); // how much to buy
 
-                double latest_close = data_vec.back().close;
+                events.push(
+                    std::make_unique<SignalEvent>(
+                        symbol,
+                        bars[bars.size() - 1].datetime,
+                        "LONG",
+                        quantity
+                    ) // add an event to queue
+                );
 
-                if (!bought[symbol] &&
-                    latest_close > stop_loss[symbol] / stop_loss_percentage)
-                {
+                stop_loss[symbol] =
+                    stop_loss_percentage * latest_close; // new stop_loss
+            }
+            //if there is already a position
+            else if (portfolio.get_position(symbol) > 0) {
+                //to close it
+                if (latest_close <= stop_loss[symbol]) {
+
                     int quantity =
-                        std::floor(
-                            portfolio.get_cash() / latest_close
-                        );
+                        portfolio.get_position(symbol);
 
                     events.push(
                         std::make_unique<SignalEvent>(
                             symbol,
-                            SignalDirection::LONG,
-                            quantity
-                        )
-                    );
-
-                    bought[symbol] = true;
-
-                    stop_loss[symbol] =
-                        stop_loss_percentage * latest_close;
+                            bars[bars.size() - 1].datetime,
+                            "EXIT",
+                            quantity));
                 }
-
-                else if (bought[symbol]) {
-
-                    if (latest_close <= stop_loss[symbol]) {
-
-                        int quantity =
-                            portfolio.get_position(symbol);
-
-                        events.push(
-                            std::make_unique<SignalEvent>(
-                                symbol,
-                                SignalDirection::EXIT,
-                                quantity
-                            )
-                        );
-
-                        bought[symbol] = false;
-                    }
-
-                    else {
-
-                        auto last_two =
-                            data.get_latest_data(symbol, 2);
-
-                        if (last_two.size() < 2)
-                            continue;
-
-                        if (last_two[1].close > last_two[0].close &&
-                            stop_loss_percentage * last_two[1].close
-                        > stop_loss[symbol])
-                        {
-                            stop_loss[symbol] =
-                                stop_loss_percentage
-                                * last_two[1].close;
-                        }
+                else {
+                    auto last_two = data.get_latest_bars(symbol, 2);
+                    if (bars.size() < 2)
+                        continue;
+                    if (bars[1].close > bars[0].close &&
+                        stop_loss_percentage * last_two[1].close
+                        > stop_loss[symbol]) // if the price is rising and new stop loss is higher -> need to update stop_loss
+                    {
+                        stop_loss[symbol] =
+                            stop_loss_percentage
+                            * bars[1].close;
                     }
                 }
             }
         }
+    }
 
     void plot() override {}
 };

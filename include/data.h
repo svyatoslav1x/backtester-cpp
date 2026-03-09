@@ -7,7 +7,8 @@
 #include <unordered_map>
 
 struct Bar {
-    std::chrono::system_clock::time_point datetime;
+    std::string symbol;
+    std::string datetime;
     double open;
     double high;
     double low;
@@ -54,7 +55,6 @@ class HistoricCSVDataHandler : DataHandler {
             if (!file.is_open()) {
                 throw std::runtime_error("Cannot open CSV file for " + symbol);
             }
-
             CSVreader reader;
             file >> reader;
 
@@ -65,7 +65,7 @@ class HistoricCSVDataHandler : DataHandler {
 
                 Bar bar;
                 bar.symbol = symbol;
-                bar.datetime = parse_datetime(row[0]);
+                bar.datetime = std::stod(row[0]);
                 bar.open   = std::stod(row[1]);
                 bar.high   = std::stod(row[2]);
                 bar.low    = std::stod(row[3]);
@@ -77,15 +77,6 @@ class HistoricCSVDataHandler : DataHandler {
 
             latest_symbol_data[symbol] = {};
         }
-    }
-    //sustem_clock - истемные часы
-    //time_point - конкретная точка во времени
-    //time_t - работает конкретно со временем из mktime и есть возможность измерить duration
-    std::chrono::system_clock::time_point parse_datetime(const std::string& dt) {
-        std::tm tm{};
-        std::stringstream ss(dt);
-        ss >> std::get_time(&tm, "%Y-%m-%d");
-        return std::chrono::system_clock::from_time_t(std::mktime(&tm));
     }
 public:
     HistoricCSVDataHandler(

@@ -17,9 +17,6 @@
 
 // stores the functions to calculate the Sharpe ratio and drawdown information
 
-
-#include "performance.hpp"
-
 #include <cmath>
 #include <numeric>
 #include <algorithm>

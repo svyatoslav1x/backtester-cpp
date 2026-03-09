@@ -4,8 +4,8 @@
 #include <fstream>
 
 class CSVreader {
-    std::vector<std::vector<std::string>> data;
 public:
+    std::vector<std::vector<std::string>> data;
     CSVreader () = default;
     friend std::istream& operator>>(std::istream& in, CSVreader& reader) {
         std::string line;

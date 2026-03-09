@@ -100,13 +100,116 @@ The "Sharpe Ratio" often quoted by those carrying out trading strategies is the 
   </mtable>
 </math>
 
-##Limitations
+## Limitations
 
 The Sharpe ratio has several limitations that should be considered when using it to evaluate the performance of an investment or trading
 
 ##Benchmark for our strategy - IMOEX
 so need to update SNP.csv database to IMOEX.csv database
 
-##A bit of structure
+## A bit of structure
 
 DataHandler → MarketEvent → Strategy → SignalEvent → Portfolio → OrderEvent → ExecutionHandler
+
+
+## MACD description
+MACD — это индикатор импульса, который определяет тренд и оценивает его силу с помощью линии MACD, сигнальной линии и гистограммы, сглаживает колебания цен и уделяет особое внимание последним ценам, чтобы выявить общий тренд.
+Если значение положительное — это бычий тренд. 12-дневная EMA выше 26-дневной EMA, значит недавние цены в целом выше цен за последние несколько недель.
+
+И наоборот, отрицательное значение линии MACD указывает на медвежий тренд. Если 12-дневная EMA ниже 26-дневной EMA, значит недавние цены ниже цен за последние несколько недель.
+
+## Strategy Description
+
+The strategy uses two **Exponential Moving Averages (EMA)**:
+
+* **Short EMA**
+* **Long EMA**
+
+### Trading Logic
+
+If
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow>
+    <msub>
+      <mi>EMA</mi>
+      <mi>short</mi>
+    </msub>
+    <mo>&gt;</mo>
+    <msub>
+      <mi>EMA</mi>
+      <mi>long</mi>
+    </msub>
+  </mrow>
+</math>
+
+→ **Uptrend** → **BUY**
+
+If
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow>
+    <msub>
+      <mi>EMA</mi>
+      <mi>short</mi>
+    </msub>
+    <mo>&lt;</mo>
+    <msub>
+      <mi>EMA</mi>
+      <mi>long</mi>
+    </msub>
+  </mrow>
+</math>
+
+→ **Downtrend** → **EXIT**
+
+### Exponential Moving Average Formula
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow>
+    <msub>
+      <mi>EMA</mi>
+      <mi>t</mi>
+    </msub>
+    <mo>=</mo>
+    <mi>α</mi>
+    <msub>
+      <mi>P</mi>
+      <mi>t</mi>
+    </msub>
+    <mo>+</mo>
+    <mo>(</mo>
+    <mn>1</mn>
+    <mo>−</mo>
+    <mi>α</mi>
+    <mo>)</mo>
+    <msub>
+      <mi>EMA</mi>
+      <mrow>
+        <mi>t</mi>
+        <mo>−</mo>
+        <mn>1</mn>
+      </mrow>
+    </msub>
+  </mrow>
+</math>
+
+where
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow>
+    <mi>α</mi>
+    <mo>=</mo>
+    <mfrac>
+      <mn>2</mn>
+      <mrow>
+        <mi>n</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mrow>
+    </mfrac>
+  </mrow>
+</math>
+
+* (P_t) — price at time (t)
+* (n) — period of the moving average
