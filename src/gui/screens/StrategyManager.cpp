@@ -1,96 +1,31 @@
 #include "StrategyManager.h"
+#include "../../../data/database/StrategyDatabase.h"
 
-#include <QStandardPaths>
 #include <QDir>
 #include <QMessageBox>
 #include <QSqlError>
 #include <QSqlQuery>
-#include <QVBoxLayout>
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QFormLayout>
 #include <QLineEdit>
-#include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QDialog>
+#include <QDialogButtonBox>
 
 StrategyManager::StrategyManager(QWidget* parent)
 : QWidget(parent) {
-    setup_database();
     setup_ui();
     load_strategies();
 }
 
-StrategyManager::~StrategyManager() {
-    if (db.isOpen()) {
-        db.close();
-    }
-}
-
-// Sets up the SQLite database where strategies are saved
-void StrategyManager::setup_database() {
-
-    // Finds a place on the user's computer to save the file
-    QString data_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir dir;
-    dir.mkpath(data_path);
-
-    QString db_path = QDir(data_path).filePath("strategies.db"); // The path to database file "strategies.db"
-
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName(db_path);
-
-    if (!db.open()) {
-        QMessageBox::critical(this, "Database Error",
-            "Failed to open database: " + db.lastError().text());
-        return;
-    }
-
-    // Creates the "strategies" table if it's the first time the app is run
-    QSqlQuery query(db);
-    QString create_table = R"(
-        CREATE TABLE IF NOT EXISTS strategies (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL,
-            type TEXT NOT NULL,
-            short_window INTEGER NOT NULL,
-            long_window INTEGER NOT NULL
-        )
-    )";
-
-    if (!query.exec(create_table)) {
-        QMessageBox::critical(this, "Database Error",
-            "Failed to create table: " + query.lastError().text());
-    }
-
-    query.exec("SELECT COUNT(*) FROM strategies");
-    if (query.next() && query.value(0).toInt() == 0) {
-        // If empty, adds a default strategy
-        add_strategy("Default MA Strategy", "Moving Average Crossover", 50, 200);
-    }
-}
-
-// Adds a new strategy to the database
-bool StrategyManager::add_strategy(const QString& name, const QString& type, int shortWindow, int longWindow) {
-    QSqlQuery query(db);
-    query.prepare("INSERT INTO strategies (name, type, short_window, long_window) VALUES (?, ?, ?, ?)");
-    query.addBindValue(name);
-    query.addBindValue(type);
-    query.addBindValue(shortWindow);
-    query.addBindValue(longWindow);
-
-    if (!query.exec()) {
-        QMessageBox::warning(this, "Error",
-            "Failed to add strategy: " + query.lastError().text());
-        return false;
-    }
-
-    return true;
-}
+StrategyManager::~StrategyManager() {}
 
 void StrategyManager::setup_ui() {
     setStyleSheet(
-    "QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1a1a2e, stop:1 #16213e); }"
-);
+        "QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1a1a2e, stop:1 #16213e); }"
+    );
 
     QVBoxLayout* main_layout = new QVBoxLayout(this);
     main_layout->setContentsMargins(40, 40, 40, 40);
@@ -115,9 +50,9 @@ void StrategyManager::setup_ui() {
         "QListWidget::item:hover { background-color: #1a4d7a; }"
         "QListWidget::item:selected { background-color: #2196F3; }"
     );
+    connect(strategy_list, &QListWidget::itemDoubleClicked, this, &StrategyManager::on_list_item_double_clicked);
 
     main_layout->addWidget(strategy_list);
-
     main_layout->addSpacing(20);
 
     QHBoxLayout* button_layout = new QHBoxLayout();
@@ -135,31 +70,30 @@ void StrategyManager::setup_ui() {
     button_layout->addStretch();
 
     main_layout->addLayout(button_layout);
-
 }
 
 void StrategyManager::load_strategies() {
     strategy_list->clear();
 
-    QSqlQuery query(db);
-    query.exec("SELECT id, name, type, short_window, long_window FROM strategies ORDER BY name");
+    QVector<StrategyData> strategies = get_all_strategies();
 
-    while (query.next()) {
-        int id = query.value(0).toInt();
-        QString name = query.value(1).toString();
-        QString type = query.value(2).toString();
-        int short_win = query.value(3).toInt();
-        int long_win = query.value(4).toInt();
-
+    for (const StrategyData& strategy : strategies) {
         QWidget* item_widget = new QWidget();
         QHBoxLayout* item_layout = new QHBoxLayout(item_widget);
         item_layout->setContentsMargins(5, 5, 5, 5);
 
-        QLabel* info_label = new QLabel(QString("%1 (%2): %3/%4").arg(name).arg(type).arg(short_win).arg(long_win));
-        info_label->setStyleSheet("background: transparent; color: #eee; font-size: 13pt;");
+        QString paramsStr;
+        for (auto it = strategy.parameters.constBegin(); it != strategy.parameters.constEnd(); ++it) {
+            paramsStr += QString("%1: %2   ").arg(it.key(), it.value());
+        }
+
+        QLabel* info_label = new QLabel(QString("%1 (%2)\n%3").arg(strategy.name).arg(strategy.model_type).arg(paramsStr));
+        info_label->setStyleSheet("background: transparent; color: #eee; font-size: 11pt;");
         item_layout->addWidget(info_label);
 
         item_layout->addStretch();
+
+        int id = strategy.id;
 
         QPushButton* edit_btn = new QPushButton("Edit");
         edit_btn->setFixedSize(60, 20);
@@ -169,6 +103,7 @@ void StrategyManager::load_strategies() {
             "QPushButton:hover { background-color: #0000f2; }"
             "QPushButton:pressed { background-color: #000087; }"
         );
+        edit_btn->setEnabled(strategy.is_editable);
         connect(edit_btn, &QPushButton::clicked, [this, id]() { on_edit_clicked(id); });
         item_layout->addWidget(edit_btn);
 
@@ -184,19 +119,73 @@ void StrategyManager::load_strategies() {
         item_layout->addWidget(delete_btn);
 
         QListWidgetItem* list_item = new QListWidgetItem(strategy_list);
-        list_item->setSizeHint(QSize(item_widget->sizeHint().width(), 60));
+        list_item->setSizeHint(QSize(item_widget->sizeHint().width(), 70));
         strategy_list->addItem(list_item);
         strategy_list->setItemWidget(list_item, item_widget);
-
-        item_widget->setLayout(item_layout);
+        list_item->setData(Qt::UserRole, id);
     }
+}
+
+QVector<StrategyData> StrategyManager::get_all_strategies() {
+    QVector<StrategyData> strategies;
+    QSqlDatabase db = StrategyDatabase::database();
+
+    QSqlQuery query(db);
+    query.exec("SELECT id, name, model_type, is_editable FROM strategies ORDER BY name");
+
+    while (query.next()) {
+        StrategyData data;
+        data.id = query.value(0).toInt();
+        data.name = query.value(1).toString();
+        data.model_type = query.value(2).toString();
+        data.is_editable = query.value(3).toInt();
+
+        QSqlQuery pQuery(db);
+        pQuery.prepare("SELECT param_key, param_value FROM strategy_parameters WHERE strategy_id = ?");
+        pQuery.addBindValue(data.id);
+        pQuery.exec();
+
+        while (pQuery.next()) {
+            data.parameters[pQuery.value(0).toString()] = pQuery.value(1).toString();
+        }
+        strategies.append(data);
+    }
+
+    return strategies;
+}
+
+StrategyData StrategyManager::get_strategy(int id) {
+    StrategyData data;
+    data.id = -1;
+    QSqlDatabase db = StrategyDatabase::database();
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id, name, model_type, is_editable FROM strategies WHERE id = ?");
+    query.addBindValue(id);
+    query.exec();
+
+    if (query.next()) {
+        data.id = query.value(0).toInt();
+        data.name = query.value(1).toString();
+        data.model_type = query.value(2).toString();
+        data.is_editable = query.value(3).toInt();
+
+        QSqlQuery pQuery(db);
+        pQuery.prepare("SELECT param_key, param_value FROM strategy_parameters WHERE strategy_id = ?");
+        pQuery.addBindValue(id);
+        pQuery.exec();
+
+        while (pQuery.next()) {
+            data.parameters[pQuery.value(0).toString()] = pQuery.value(1).toString();
+        }
+    }
+
+    return data;
 }
 
 void StrategyManager::on_edit_clicked(int id) {
     StrategyData strategy = get_strategy(id);
-    if (strategy.id < 0) {
-        return;
-    }
+    if (strategy.id < 0) return;
 
     QDialog dialog(this);
     dialog.setWindowTitle("Edit Strategy");
@@ -208,25 +197,37 @@ void StrategyManager::on_edit_clicked(int id) {
     QLineEdit* name_edit = new QLineEdit(strategy.name);
     form_layout->addRow("Strategy Name:", name_edit);
 
-    QComboBox* type_combo = new QComboBox();
+    QLabel* type_label = new QLabel(strategy.model_type);
+    form_layout->addRow("Model Type:", type_label);
 
-    //list of strategies
-    type_combo->addItems({"Moving Average Crossover", "strategy 1", "strategy 2", "strategy 3"});
-    int type_index = type_combo->findText(strategy.type);
-    if (type_index != -1) {
-        type_combo->setCurrentIndex(type_index);
+    QMap<QString, QSpinBox*> int_spins;
+    QMap<QString, QDoubleSpinBox*> double_spins;
+
+    for (auto it = strategy.parameters.constBegin(); it != strategy.parameters.constEnd(); ++it) {
+        QString key = it.key();
+        QString value = it.value();
+
+        if (key == "short_window" || key == "long_window") {
+            QSpinBox* spin = new QSpinBox();
+            spin->setRange(1, 10000);
+            spin->setValue(value.toInt());
+            form_layout->addRow(key + ":", spin);
+            int_spins[key] = spin;
+        } else if (key == "stop_loss_percentage") {
+            QDoubleSpinBox* dspin = new QDoubleSpinBox();
+            dspin->setRange(0.0, 100.0);
+            dspin->setSingleStep(0.01);
+            dspin->setValue(value.toDouble());
+            form_layout->addRow(key + ":", dspin);
+            double_spins[key] = dspin;
+        } else {
+            QSpinBox* spin = new QSpinBox();
+            spin->setRange(0, 10000);
+            spin->setValue(value.toInt());
+            form_layout->addRow(key + ":", spin);
+            int_spins[key] = spin;
+        }
     }
-    form_layout->addRow("Strategy Type:", type_combo);
-
-    QSpinBox* short_spin = new QSpinBox();
-    short_spin->setRange(1, 1000);
-    short_spin->setValue(strategy.shortWindow);
-    form_layout->addRow("Short MA Window:", short_spin);
-
-    QSpinBox* long_spin = new QSpinBox();
-    long_spin->setRange(1, 1000);
-    long_spin->setValue(strategy.longWindow);
-    form_layout->addRow("Long MA Window:", long_spin);
 
     layout->addLayout(form_layout);
 
@@ -237,36 +238,33 @@ void StrategyManager::on_edit_clicked(int id) {
 
     if (dialog.exec() == QDialog::Accepted) {
         QString new_name = name_edit->text().trimmed();
-        QString new_type = type_combo->currentText();
-        int short_val = short_spin->value();
-        int long_val = long_spin->value();
-
-        if (new_name == strategy.name &&
-            short_val == strategy.shortWindow &&
-            new_type == strategy.type &&
-            long_val == strategy.longWindow) {
-            QMessageBox::information(this, "No Changes", "Nothing was changed.");
-            return;
-            }
 
         if (new_name.isEmpty()) {
             QMessageBox::warning(this, "Invalid Input", "Strategy name cannot be empty.");
             return;
         }
 
-        if (long_val <= short_val) {
-            QMessageBox::warning(this, "Invalid Parameters",
-                "Long MA window must be greater than Short MA window.");
-            return;
-        }
-
         if (strategy_name_exists(new_name, id)) {
-            QMessageBox::warning(this, "Duplicate Name",
-                "A strategy with this name already exists. Please choose a different name.");
+            QMessageBox::warning(this, "Duplicate Name", "A strategy with this name already exists.");
             return;
         }
 
-        if (update_strategy(id, new_name, new_type, short_val, long_val)) {
+        if (int_spins.contains("short_window") && int_spins.contains("long_window")) {
+            if (int_spins["long_window"]->value() <= int_spins["short_window"]->value()) {
+                QMessageBox::warning(this, "Invalid Parameters", "Long MA window must be greater than Short MA window.");
+                return;
+            }
+        }
+
+        QMap<QString, QString> new_params;
+        for (auto it = int_spins.constBegin(); it != int_spins.constEnd(); ++it) {
+            new_params[it.key()] = QString::number(it.value()->value());
+        }
+        for (auto it = double_spins.constBegin(); it != double_spins.constEnd(); ++it) {
+            new_params[it.key()] = QString::number(it.value()->value(), 'f', 2);
+        }
+
+        if (update_strategy(id, new_name, new_params)) {
             load_strategies();
             emit strategy_updated();
             QMessageBox::information(this, "Success", "Strategy updated successfully!");
@@ -274,28 +272,48 @@ void StrategyManager::on_edit_clicked(int id) {
     }
 }
 
-StrategyData StrategyManager::get_strategy(int id) {
-    StrategyData data;
-    data.id = -1;
+bool StrategyManager::update_strategy(int id, const QString& name, const QMap<QString, QString>& params) {
+    QSqlDatabase db = StrategyDatabase::database();
+
+    if (!db.transaction()) return false;
 
     QSqlQuery query(db);
-    query.prepare("SELECT id, name, type, short_window, long_window FROM strategies WHERE id = ?");
+    query.prepare("UPDATE strategies SET name = ? WHERE id = ?");
+    query.addBindValue(name);
     query.addBindValue(id);
-    query.exec();
 
-    if (query.next()) {
-        data.id = query.value(0).toInt();
-        data.name = query.value(1).toString();
-        data.type = query.value(2).toString();
-        data.shortWindow = query.value(3).toInt();
-        data.longWindow = query.value(4).toInt();
+    if (!query.exec()) {
+        db.rollback();
+        QMessageBox::warning(this, "Error", "Failed to update strategy: " + query.lastError().text());
+        return false;
     }
 
-    return data;
+    for (auto it = params.constBegin(); it != params.constEnd(); ++it) {
+        QSqlQuery pQuery(db);
+        pQuery.prepare("UPDATE strategy_parameters SET param_value = ? WHERE strategy_id = ? AND param_key = ?");
+        pQuery.addBindValue(it.value());
+        pQuery.addBindValue(id);
+        pQuery.addBindValue(it.key());
+
+        if (!pQuery.exec()) {
+            db.rollback();
+            QMessageBox::warning(this, "Error", "Failed to update parameters: " + pQuery.lastError().text());
+            return false;
+        }
+    }
+
+    if (!db.commit()) {
+        db.rollback();
+        return false;
+    }
+
+    return true;
 }
 
 bool StrategyManager::strategy_name_exists(const QString& name, int excludeId) {
+    QSqlDatabase db = StrategyDatabase::database();
     QSqlQuery query(db);
+
     if (excludeId >= 0) {
         query.prepare("SELECT COUNT(*) FROM strategies WHERE name = ? AND id != ?");
         query.addBindValue(name);
@@ -313,57 +331,16 @@ bool StrategyManager::strategy_name_exists(const QString& name, int excludeId) {
     return false;
 }
 
-bool StrategyManager::update_strategy(int id, const QString& name, const QString& type, int shortWindow, int longWindow) {
-    QSqlQuery query(db);
-    query.prepare("UPDATE strategies SET name = ?, type = ?, short_window = ?, long_window = ? WHERE id = ?");
-    query.addBindValue(name);
-    query.addBindValue(type);
-    query.addBindValue(shortWindow);
-    query.addBindValue(longWindow);
-    query.addBindValue(id);
-
-    if (!query.exec()) {
-        QMessageBox::warning(this, "Error",
-            "Failed to update strategy: " + query.lastError().text());
-        return false;
-    }
-
-    return true;
-}
-
 void StrategyManager::on_list_item_double_clicked(QListWidgetItem* item) {
-    int row = strategy_list->row(item);
-
-    auto strategies = get_all_strategies();
-    if (row >= 0 && row < strategies.size()) {
-        on_edit_clicked(strategies[row].id);
+    if (item) {
+        int id = item->data(Qt::UserRole).toInt();
+        on_edit_clicked(id);
     }
-}
-
-QVector<StrategyData> StrategyManager::get_all_strategies() {
-    QVector<StrategyData> strategies;
-
-    QSqlQuery query(db);
-    query.exec("SELECT id, name, type, short_window, long_window FROM strategies ORDER BY name");
-
-    while (query.next()) {
-        StrategyData data;
-        data.id = query.value(0).toInt();
-        data.name = query.value(1).toString();
-        data.type = query.value(2).toString();
-        data.shortWindow = query.value(3).toInt();
-        data.longWindow = query.value(4).toInt();
-        strategies.append(data);
-    }
-
-    return strategies;
 }
 
 void StrategyManager::on_delete_clicked(int id) {
     StrategyData strategy = get_strategy(id);
-    if (strategy.id < 0) {
-        return;
-    }
+    if (strategy.id < 0) return;
 
     QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
         QString("Are you sure you want to delete strategy '%1'?").arg(strategy.name),
@@ -378,15 +355,63 @@ void StrategyManager::on_delete_clicked(int id) {
 }
 
 bool StrategyManager::remove_strategy(int id) {
-    QSqlQuery query(db);
-    query.prepare("DELETE FROM strategies WHERE id = ?");
-    query.addBindValue(id);
+    QSqlDatabase db = StrategyDatabase::database();
+    if (!db.transaction()) return false;
 
-    if (!query.exec()) {
-        QMessageBox::warning(this, "Error",
-            "Failed to delete strategy: " + query.lastError().text());
+    QSqlQuery pQuery(db);
+    pQuery.prepare("DELETE FROM strategy_parameters WHERE strategy_id = ?");
+    pQuery.addBindValue(id);
+    if (!pQuery.exec()) {
+        db.rollback();
         return false;
     }
 
+    QSqlQuery query(db);
+    query.prepare("DELETE FROM strategies WHERE id = ?");
+    query.addBindValue(id);
+    if (!query.exec()) {
+        db.rollback();
+        QMessageBox::warning(this, "Error", "Failed to delete strategy: " + query.lastError().text());
+        return false;
+    }
+
+    db.commit();
+    return true;
+}
+
+bool StrategyManager::add_strategy(const QString& name, const QString& model_type, const QMap<QString, QString>& params) {
+    QSqlDatabase db = StrategyDatabase::database();
+    if (!db.transaction()) return false;
+
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO strategies (name, model_type, is_editable) VALUES (?, ?, 1)");
+    query.addBindValue(name);
+    query.addBindValue(model_type);
+
+    if (!query.exec()) {
+        db.rollback();
+        QMessageBox::warning(this, "Error", "Failed to add strategy: " + query.lastError().text());
+        return false;
+    }
+
+    int strategyId = query.lastInsertId().toInt();
+
+    for (auto it = params.constBegin(); it != params.constEnd(); ++it) {
+        QSqlQuery pQuery(db);
+        QString valType = (it.key() == "stop_loss_percentage") ? "double" : "int";
+
+        pQuery.prepare("INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable) VALUES (?, ?, ?, ?, 1)");
+        pQuery.addBindValue(strategyId);
+        pQuery.addBindValue(it.key());
+        pQuery.addBindValue(it.value());
+        pQuery.addBindValue(valType);
+
+        if (!pQuery.exec()) {
+            db.rollback();
+            return false;
+        }
+    }
+
+    db.commit();
     return true;
 }

@@ -9,7 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Charts)
 
 set(SOURCES
         src/main.cpp
@@ -20,6 +20,14 @@ set(SOURCES
         src/gui/screens/done_screen.cpp
         src/gui/screens/style.h
         data/database/StrategyDatabase.cpp
+        src/gui/screens/StrategyManager.cpp
+        src/gui/screens/StrategyManager.h
+        src/gui/screens/ChartWidget.cpp
+        src/gui/screens/ChartWidget.h
+        src/gui/screens/BacktestWindow.cpp
+        src/gui/screens/BacktestWindow.h
+        src/gui/screens/SimulationEngine.cpp
+        src/gui/screens/SimulationEngine.h
 )
 
 add_executable(Backtester ${SOURCES})
@@ -30,4 +38,5 @@ target_link_libraries(Backtester PRIVATE
         Qt6::Widgets
         Qt6::Network
         Qt6::Sql
+        Qt6::Charts
 )
