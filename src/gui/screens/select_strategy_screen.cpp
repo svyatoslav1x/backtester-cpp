@@ -1,6 +1,6 @@
 #include "select_strategy_screen.h"
+
 #include "style.h"
-#include <QSizePolicy>
 
 SelectStrategyScreen::SelectStrategyScreen(QWidget *parent) : QWidget(parent) {
     buildUi();

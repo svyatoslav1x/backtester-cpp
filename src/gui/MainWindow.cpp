@@ -20,6 +20,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QUrl>
+#include <QUrlQuery>
 #include <QVector>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -59,7 +60,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         QMessageBox::warning(this, "Database Error", "Could not initialize strategies database.");
     } // initializing the database (vital for program)
 
-    seedStrategiesIfNeeded(); // adds the default 2 strategies, todo:when Svyat does the 3rd strategy add it to database
+    seedStrategiesIfNeeded();
+    // adds the default 2 strategies, todo:when SlavaA does the 3rd strategy add it to database
     refreshStrategyList(); // makes a list for all the strategies
     loadDatasets(); // gets all the datasets (data/*.csv)
 
@@ -79,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     connect(start_screen, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
         refreshStrategyList(); // refresh the strategy list before switching there
-        stacked_widget->setCurrentWidget(select_strategy_screen); // switching to the strategy selectiong screen
+        stacked_widget->setCurrentWidget(select_strategy_screen); // switching to the strategy selecting screen
     });
 
     // create screen buttons
@@ -111,9 +113,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     WHERE name = ?
                 )");
                 checkQuery.addBindValue(input.name.trimmed());
-                // since the name isn't static i have to update it through ? and addBindValue interface
+                // since the name isn't static I have to update it through ? and addBindValue interface
                 if (!checkQuery.exec()) {
-                    // execute the sql command with a check
+                    // execute the SQL command with a check
                     db.rollback();
                     QMessageBox::warning(this, "Error", "Idk what is this");
                     return;
@@ -225,14 +227,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
         if (!saveAppState(currentSelectedDataset, selectedId)) {
             // todo: when linking the whole project make all of this work
-            QMessageBox::warning(this, "Error", "Didn`t save selected dataset and strategy.");
+            QMessageBox::warning(this, "Error", "Didn't save selected dataset and strategy.");
             return;
         }
     });
 
     // done screen buttons
     connect(done_screen, &DoneScreen::BacktestScreenSwitch, this, [this] {
-        // stacked_widget->setCurrentWidget(); connect to charts (nikitas part)
+        // stacked_widget->setCurrentWidget(); connect to charts (Nikita's part)
     });
 
     connect(done_screen, &DoneScreen::StartScreenSwitch, this, [this] {
@@ -346,7 +348,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     }
 }
 
-void MainWindow::refreshStrategyList() {
+void MainWindow::refreshStrategyList() const {
     QList<QPair<QString, int> > items;
     QSqlDatabase db = StrategyDatabase::database();
     QSqlQuery query(db);
@@ -357,14 +359,14 @@ void MainWindow::refreshStrategyList() {
     }
 
     while (query.next()) {
-        // until i can't stop getting new lines
+        // until I can't stop getting new lines
         items.append({query.value(0).toString(), query.value(1).toInt()});
     }
 
     select_strategy_screen->setStrategies(items); // sets strategies to choose from
 }
 
-void MainWindow::loadDatasets() {
+void MainWindow::loadDatasets() const {
     QDir dir(QDir::currentPath() + "/../data"); // redirect to the data/ folder
     if (!dir.exists()) {
         return;
@@ -385,18 +387,50 @@ void MainWindow::setupNewsManager() {
     connect(network_manager, &QNetworkAccessManager::finished, this, &MainWindow::handleNewsReply);
 }
 
-void MainWindow::fetchNews() {
+void MainWindow::fetchNews() const {
     if (last_news_refresh.isValid() && last_news_refresh.secsTo(QDateTime::currentDateTime()) < 60) {
         return;
     }
 
-    QUrl url(
-        "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
-        "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
-    // should have put the apikey in .env but its free so i think it will be overcomplicating
+    const QString apiKey = loadApiKeyFromEnvFile();
+    if (apiKey.isEmpty()) {
+        return;
+    }
+
+    QUrl url("https://gnews.io/api/v4/top-headlines");
+    QUrlQuery query;
+    query.addQueryItem("category", "business");
+    query.addQueryItem("lang", "en");
+    query.addQueryItem("country", "us");
+    query.addQueryItem("max", "3");
+    query.addQueryItem("apikey", apiKey);
+    url.setQuery(query);
 
     QNetworkRequest request(url);
     network_manager->get(request);
+}
+
+QString MainWindow::loadApiKeyFromEnvFile() const {
+    QDir dir(QDir::currentPath()); // current path will always br "cmake-build-debug"
+
+    if (dir.dirName() == "cmake-build-debug") {
+        dir.cdUp(); // go to the project directory
+    }
+    QFile file(dir.filePath(".env"));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QString();
+    }
+
+    QTextStream in(&file); // stream for reading the file
+    while (!in.atEnd()) { // keep reading until the end of the file
+        QString line = in.readLine().trimmed(); // read one line and remove surrounding spaces
+
+        if (line.startsWith("GNEWS_API_KEY=")) {
+            return line.section('=', 1).trimmed(); // return the value after =
+        }
+    }
+
+    return QString();
 }
 
 void MainWindow::handleNewsReply(QNetworkReply *reply) {

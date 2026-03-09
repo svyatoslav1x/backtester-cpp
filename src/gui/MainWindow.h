@@ -22,11 +22,13 @@ public:
 
 private:
     // setup
-    void loadDatasets();
+    void loadDatasets() const;
 
-    void refreshStrategyList();
+    void refreshStrategyList() const;
 
     void seedStrategiesIfNeeded();
+
+    QString loadApiKeyFromEnvFile() const;
 
     // save data for backtest
     bool saveAppState(const QString &dataset, int strategyId);
@@ -51,8 +53,11 @@ private:
 
     // news
     QPointer<QNetworkAccessManager> network_manager;
+
     void setupNewsManager();
-    void fetchNews();
+
+    void fetchNews() const;
+
     void handleNewsReply(QNetworkReply *reply);
 };
 
