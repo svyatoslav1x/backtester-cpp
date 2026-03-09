@@ -25,124 +25,60 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setWindowTitle("Backtester Application"); // window title
 
-    QPointer<QScreen> screen = QGuiApplication::primaryScreen();
-    QRect screenSize = screen->geometry();
+    screen = QGuiApplication::primaryScreen(); // getting the main screen in the system
+    screenSize = screen->geometry();
     double w = screenSize.width();
     double h = screenSize.height();
-    resize(w * 0.69, h * 0.67); // funny numbers
+    resize(static_cast<int>(w * 0.69), static_cast<int>(h * 0.67)); // funny numbers
     setMinimumSize(760, 520); // shouldn't be smaller than this, because to some screens its vital
 
-    QLinearGradient gradient(0, 0, w, h);
-    gradient.setColorAt(0.0, QColor("#EFEFF0"));
-    gradient.setColorAt(1.0, QColor("#EEEEEE"));
+    gradient = QLinearGradient(0, 0, w, h); // a gradient from one smooth gray to another
+    gradient.setColorAt(0.0, QColor(239, 239, 240)); // #EFEFF0 color, changed to RGB for efficiency
+    gradient.setColorAt(1.0, QColor(238, 238, 238)); // #EEEEEE color, changed to RGB for efficiency
 
-    QPalette palette;
-    palette.setBrush(QPalette::Window, QBrush(gradient));
-    setPalette(palette);
-    setAutoFillBackground(true);
+    palette.setBrush(QPalette::Window, QBrush(gradient)); // set the gradient for background
+    setPalette(palette); // tells the window to use this pallet
+    setAutoFillBackground(true); // autofill the background
 
-    stacked_widget = new QStackedWidget(this);
-    start_screen = new StartScreen(this);
-    select_strategy_screen = new SelectStrategyScreen(this);
-    create_strategy_screen = new CreateStrategyScreen(this);
-    done_screen = new DoneScreen(this);
+    stacked_widget = new QStackedWidget(this); // will have all the widgets and show only one
 
-    stacked_widget->addWidget(start_screen);
-    stacked_widget->addWidget(select_strategy_screen);
-    stacked_widget->addWidget(create_strategy_screen);
-    stacked_widget->addWidget(done_screen);
+    start_screen = new StartScreen(this); // screen with news + choice of dataset
+    select_strategy_screen = new SelectStrategyScreen(this); // choosing a strategy after which you can start backtest
+    create_strategy_screen = new CreateStrategyScreen(this); // screen for creating a custom strategy
+    done_screen = new DoneScreen(this); // screen with overall results of backtest
 
-    stacked_widget->setCurrentIndex(0);
-    setCentralWidget(stacked_widget);
+    stacked_widget->addWidget(start_screen); // 0 - start_screen
+    stacked_widget->addWidget(select_strategy_screen); // 1 - select_strategy_screen
+    stacked_widget->addWidget(create_strategy_screen); // 2 - create_strategy_screen
+    stacked_widget->addWidget(done_screen); // 3 - done_screen
+
+    stacked_widget->setCurrentIndex(0); // the first screen is the starting one
+    setCentralWidget(stacked_widget); // makes the stacket_widget the main widget for the window
 
     if (!StrategyDatabase::initialize()) {
         QMessageBox::warning(this, "Database Error", "Could not initialize strategies database.");
-    }
+    } // initializing the database (vital for program)
 
-    seedStrategiesIfNeeded();
-    refreshStrategyList();
-    loadDatasets();
+    seedStrategiesIfNeeded(); // adds the default 2 strategies, todo:when Svyat does the 3rd strategy add it to database
+    refreshStrategyList(); // makes a list for all the strategies
+    loadDatasets(); // gets all the datasets (data/*.csv)
 
-    auto start = qobject_cast<StartScreen *>(stacked_widget->widget(0));
-    auto select = qobject_cast<SelectStrategyScreen *>(stacked_widget->widget(1));
-    auto create = qobject_cast<CreateStrategyScreen *>(stacked_widget->widget(2));
-    auto done = qobject_cast<DoneScreen *>(stacked_widget->widget(3));
+    network_manager = new QNetworkAccessManager(this); // to work with network requests
+    setupNewsManager(); // sets up what happens when the news reply comes back
+    fetchNews(); // Loads news just when the app starts
 
-    network_manager = new QNetworkAccessManager(this);
-
-    connect(network_manager, &QNetworkAccessManager::finished, this, [this](QNetworkReply *reply) {
-        if (reply->error() != QNetworkReply::NoError) {
-            start_screen->setNewsText("No More News In LA.");
-            reply->deleteLater();
-            return;
-        }
-
-        const QByteArray responseData = reply->readAll();
-        reply->deleteLater();
-
-        QJsonParseError parseError;
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData, &parseError);
-
-        if (parseError.error != QJsonParseError::NoError || !jsonDoc.isObject()) {
-            start_screen->setNewsText("No More News In LA.");
-            return;
-        }
-
-        QJsonObject rootObject = jsonDoc.object();
-        QJsonArray articles = rootObject.value("articles").toArray();
-
-        if (articles.isEmpty()) {
-            start_screen->setNewsText("No More News In LA.");
-            return;
-        }
-
-        QString text;
-
-        for (int i = 0; i < std::min<int>(3, articles.size()); ++i) {
-            QJsonObject article = articles[i].toObject();
-
-            QString title = article.value("title").toString("No title");
-            QString description = article.value("description").toString("No description");
-            QString url = article.value("url").toString();
-
-            text += QString("News %1\n").arg(i + 1);
-            text += "Title: " + title + "\n";
-            text += "Description: " + description + "\n";
-            text += "Link: " + url + "\n\n";
-        }
-
-        start_screen->setNewsText(text);
-        last_news_refresh = QDateTime::currentDateTime();
-    });
-
-    auto refreshNews = [this]() {
-        if (last_news_refresh.isValid() &&
-            last_news_refresh.secsTo(QDateTime::currentDateTime()) < 60) {
-            return;
-        }
-
-        QUrl url(
-            "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
-            "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
-        // free api key with 100 запросы per day should actually be put in .env file, but it's a small project so this will do
-        QNetworkRequest request(url);
-        network_manager->get(request);
-    };
-
-    refreshNews();
-
-    connect(stacked_widget, &QStackedWidget::currentChanged, this, [refreshNews](int index) {
+    connect(stacked_widget, &QStackedWidget::currentChanged, this, [this](int index) {
         if (index == 0) {
-            refreshNews();
+            fetchNews(); // if we get back to the main screen have to update news
         }
     });
 
     // start screen buttons
-    connect(start, &StartScreen::createStrategySwitch, this, [this] {
+    connect(start_screen, &StartScreen::createStrategySwitch, this, [this] {
         stacked_widget->setCurrentWidget(create_strategy_screen);
     });
 
-    connect(start, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
+    connect(start_screen, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
         currentSelectedDataset = dataset.trimmed();
 
         if (currentSelectedDataset.isEmpty()) {
@@ -155,12 +91,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     });
 
     // create screen buttons
-    connect(create, &CreateStrategyScreen::StartScreenSwitch, this, [this] {
+    connect(create_strategy_screen, &CreateStrategyScreen::StartScreenSwitch, this, [this] {
         stacked_widget->setCurrentWidget(start_screen);
     });
 
-    connect(create, &CreateStrategyScreen::saveStrategyRequested, this,
-            [this, create](const CreateStrategyInput &input) {
+    connect(create_strategy_screen, &CreateStrategyScreen::saveStrategyRequested, this,
+            [this](const CreateStrategyInput &input) {
                 if (input.name.trimmed().isEmpty()) {
                     QMessageBox::warning(this, "Error", "Strategy name cannot be empty");
                     return;
@@ -261,19 +197,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     return;
                 }
 
-                create->resetForm();
+                create_strategy_screen->resetForm();
                 refreshStrategyList();
                 stacked_widget->setCurrentWidget(start_screen);
             });
 
     // select screen buttons
-    connect(select, &SelectStrategyScreen::StartScreenSwitch, this, [this] {
+    connect(select_strategy_screen, &SelectStrategyScreen::StartScreenSwitch, this, [this] {
         stacked_widget->setCurrentWidget(start_screen);
     });
 
-    connect(select, &SelectStrategyScreen::StartBacktestSwitch, this, [this, select] {
-        const int selectedId = select->selectedStrategyId();
-        const QString selectedName = select->selectedStrategyText();
+    connect(select_strategy_screen, &SelectStrategyScreen::StartBacktestSwitch, this, [this] {
+        const int selectedId = select_strategy_screen->selectedStrategyId();
+        const QString selectedName = select_strategy_screen->selectedStrategyText();
 
         if (selectedId < 0) {
             QMessageBox::warning(this, "Error", "Choose a strategy");
@@ -297,11 +233,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     });
 
     // done screen buttons
-    connect(done, &DoneScreen::BacktestScreenSwitch, this, [this] {
+    connect(done_screen, &DoneScreen::BacktestScreenSwitch, this, [this] {
         // stacked_widget->setCurrentWidget(); connect to charts (nikitas part)
     });
 
-    connect(done, &DoneScreen::StartScreenSwitch, this, [this] {
+    connect(done_screen, &DoneScreen::StartScreenSwitch, this, [this] {
         stacked_widget->setCurrentWidget(start_screen);
     });
 }
@@ -457,4 +393,70 @@ void MainWindow::loadDatasets() {
 bool MainWindow::saveAppState(const QString &dataset, int strategyId) {
     // todo:: link this with the rest of the code so that it can be used for models
     return true;
+}
+
+void MainWindow::setupNewsManager() {
+    network_manager = new QNetworkAccessManager(this);
+
+    connect(network_manager, &QNetworkAccessManager::finished,
+            this, &MainWindow::handleNewsReply);
+}
+
+void MainWindow::fetchNews() {
+    if (last_news_refresh.isValid() &&
+        last_news_refresh.secsTo(QDateTime::currentDateTime()) < 60) {
+        return;
+    }
+
+    QUrl url(
+        "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
+        "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
+
+    QNetworkRequest request(url);
+    network_manager->get(request);
+}
+
+void MainWindow::handleNewsReply(QNetworkReply *reply) {
+    if (reply->error() != QNetworkReply::NoError) {
+        start_screen->setNewsText("No More News In LA.");
+        reply->deleteLater();
+        return;
+    }
+
+    const QByteArray responseData = reply->readAll();
+    reply->deleteLater();
+
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData, &parseError);
+
+    if (parseError.error != QJsonParseError::NoError || !jsonDoc.isObject()) {
+        start_screen->setNewsText("No More News In LA.");
+        return;
+    }
+
+    QJsonObject rootObject = jsonDoc.object();
+    QJsonArray articles = rootObject.value("articles").toArray();
+
+    if (articles.isEmpty()) {
+        start_screen->setNewsText("No More News In LA.");
+        return;
+    }
+
+    QString text;
+
+    for (int i = 0; i < std::min<int>(3, articles.size()); ++i) {
+        QJsonObject article = articles[i].toObject();
+
+        QString title = article.value("title").toString("No title");
+        QString description = article.value("description").toString("No description");
+        QString url = article.value("url").toString();
+
+        text += QString("News %1\n").arg(i + 1);
+        text += "Title: " + title + "\n";
+        text += "Description: " + description + "\n";
+        text += "Link: " + url + "\n\n";
+    }
+
+    start_screen->setNewsText(text);
+    last_news_refresh = QDateTime::currentDateTime();
 }

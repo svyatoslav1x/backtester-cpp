@@ -35,6 +35,8 @@ private:
     QDateTime last_news_refresh;
 
     // screens
+    QPointer<QScreen> screen;
+    QRect screenSize;
     QPointer<StartScreen> start_screen;
     QPointer<SelectStrategyScreen> select_strategy_screen;
     QPointer<CreateStrategyScreen> create_strategy_screen;
@@ -43,8 +45,15 @@ private:
     QPointer<QWidget> backtest_screen; // todo:: should be fixed to nikita's class
     QPointer<QStackedWidget> stacked_widget;
 
+    // different helpers
+    QLinearGradient gradient;
+    QPalette palette;
+
     // news
     QPointer<QNetworkAccessManager> network_manager;
+    void setupNewsManager();
+    void fetchNews();
+    void handleNewsReply(QNetworkReply *reply);
 };
 
 #endif //MAIN_WINDOW
