@@ -1,0 +1,56 @@
+#include "../../include/backtester.h"
+#include <iostream>
+
+Backtester::Backtester(std::shared_ptr<std::queue<std::unique_ptr<Event>>> events_queue,
+					   std::unique_ptr<DataHandler> dh,
+					   std::unique_ptr<Portfolio> port,
+					   std::unique_ptr<ExecutionHandler> exec) :
+	events(events_queue), data_handler(std::move(dh)), portfolio(std::move(port)),
+	execution_handler(std::move(exec)) {}
+
+void Backtester::set_strategy(std::unique_ptr<Strategy> new_strategy) { strategy = std::move(new_strategy); }
+
+void Backtester::run() {
+	if (!strategy) {
+		std::cerr << "Error: No strategy defined. Cannot run backtest." << std::endl;
+		return;
+	}
+
+	std::cout << "Starting backtest..." << std::endl;
+
+	while (data_handler->if_continue_backtest()) {
+		data_handler->update_bars();
+
+		while (!events->empty()) {
+			std::unique_ptr<Event> event = std::move(events->front());
+			events->pop();
+
+			if (event) {
+				switch (event->type()) {
+				case EventType::MARKET:
+					strategy->calculate_signals(*event);
+					portfolio->update_timeindex(*event);
+					break;
+
+				case EventType::SIGNAL:
+					portfolio->update_signal(*event);
+					break;
+
+				case EventType::ORDER:
+					execution_handler->execute_order(*event);
+					break;
+
+				case EventType::FILL:
+					portfolio->update_fill(*event);
+					break;
+				}
+			}
+		}
+	}
+
+	auto stats = static_cast<NaivePortfolio*>(portfolio.get())->summary_stats();
+	std::cout << "\n--- Performance Summary ---" << std::endl;
+	for (const auto& stat : stats) {
+		std::cout << stat.first << ": " << stat.second << std::endl;
+	}
+}

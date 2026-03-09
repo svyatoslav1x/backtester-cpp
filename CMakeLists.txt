@@ -6,71 +6,63 @@ project(backtester-cpp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)
 
 # it is used to generate compile_commands.json for clangd
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
+# set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # =============================================================================
 # Find Qt6 Libraries
 # =============================================================================
-# This command finds the necessary Qt6 components.
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 
-# Automatically handle Qt's special build steps (MOC, UIC, RCC)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-# Name of the final application executable
-add_executable(backtester-cpp "")
+# Create the executable
+add_executable(backtester-cpp src/main.cpp)
 
 # =============================================================================
 # Source Files
 # =============================================================================
 
-# --- Backend Files ---
+# --- Backend Core Files ---
 target_sources(backtester-cpp PRIVATE
-    # src/core/HistoricCSVDataHandler.cpp
-    # src/core/Portfolio.cpp
-    # src/core/Execution.cpp
+    src/core/backtester.cpp
+    src/core/data.cpp
+    src/core/event.cpp
+    src/core/execution.cpp
+    src/core/performance.cpp
+    src/core/portfolio.cpp
 )
 
-# --- Strategy Files ---
+# --- Strategy Implementations ---
 target_sources(backtester-cpp PRIVATE
-    # src/strategy/MovingAveragesLongStrategy.cpp
+    src/strategies/macd.cpp
+    src/strategies/stop_loss.cpp
 )
 
 # --- Qt Files (GUI) ---
 target_sources(backtester-cpp PRIVATE
-    src/main.cpp
     # src/qt_app/MainWindow.cpp
     # src/qt_app/DashboardPanel.cpp
     # src/qt_app/ChartingPanel.cpp
     # src/qt_app/BacktesterWorker.cpp
-    # src/qt_app/resources/resources.qrc # Qt resource file
+    # src/qt_app/resources/resources.qrc
 )
 
-# This doesn't affect compilation but improves the developer experience.
-target_sources(backtester-cpp PRIVATE
-    # src/core/Events.hpp
-    # src/core/ThreadSafeQueue.hpp
-    # src/core/HistoricCSVDataHandler.hpp
-    # src/core/Portfolio.hpp
-    # src/core/Execution.hpp
-    # src/strategy/Strategy.hpp
-    # src/strategy/MovingAveragesLongStrategy.hpp
-    # src/qt_app/MainWindow.hpp
-    # src/qt_app/DashboardPanel.hpp
-    # src/qt_app/ChartingPanel.hpp
-    # src/qt_app/BacktesterWorker.hpp
+# =============================================================================
+# Include Directories
+# =============================================================================
+target_include_directories(backtester-cpp PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include       # For core headers (event.h, data.h, etc.)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/strategies # For strategy-specific headers (macd.h)
+    ${CMAKE_CURRENT_BINARY_DIR}                # For Qt auto-generated headers
 )
 
 # =============================================================================
 # Link Libraries
 # =============================================================================
-# This connects application to the Qt libraries it needs.
 target_link_libraries(backtester-cpp PRIVATE
     Qt6::Widgets
     Qt6::Core
@@ -78,23 +70,19 @@ target_link_libraries(backtester-cpp PRIVATE
 )
 
 # =============================================================================
-# Include Directories
+# Data Files Management
 # =============================================================================
-# Tell the compiler where to find header files
-target_include_directories(backtester-cpp PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_BINARY_DIR} # Needed for Qt's auto-generated headers
-)
+# Copy the 'data' folder to the build directory so the app can find CSVs
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # =============================================================================
-# Misc
+# Platform Specifics
 # =============================================================================
-# Define a preprocessor macro for easier debugging
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(backtester-cpp PRIVATE DEBUG)
 endif()
 
-# For Windows, create a GUI application instead of a console one
+# On Windows, hide the console for GUI apps
 if(WIN32)
     set_target_properties(backtester-cpp PROPERTIES WIN32_EXECUTABLE ON)
 endif()
