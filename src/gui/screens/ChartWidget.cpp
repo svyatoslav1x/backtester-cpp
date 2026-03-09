@@ -3,62 +3,61 @@
 #include <QTimer>
 #include <QToolTip>
 
-InteractiveChartView::InteractiveChartView(QChart* chart, QWidget* parent)
+InteractiveChartView::InteractiveChartView(QChart *chart, QWidget *parent)
     : QChartView(chart, parent) {
     setRubberBand(QChartView::RectangleRubberBand);
 }
 
-void InteractiveChartView::wheelEvent(QWheelEvent* event) {
+void InteractiveChartView::wheelEvent(QWheelEvent *event) {
     qreal factor = event->angleDelta().y() > 0 ? 0.97 : 1.03;
     chart()->zoom(factor);
     QChartView::wheelEvent(event);
 }
 
-void InteractiveChartView::mouseMoveEvent(QMouseEvent* event) {
+void InteractiveChartView::mouseMoveEvent(QMouseEvent *event) {
     QPointF chartPoint = chart()->mapToValue(event->pos());
     emit pointHovered(chartPoint);
     QChartView::mouseMoveEvent(event);
 }
 
-ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent)
+ChartWidget::ChartWidget(const QString &title, bool price_chart, QWidget *parent)
     : QWidget(parent), is_price_chart(price_chart), data_point_counter(0) {
-
     chart = new QChart();
     chart->setTitle(title);
     chart->setTitleFont(QFont("Arial", 14, QFont::Bold));
     chart->setAnimationOptions(QChart::NoAnimation);
-    chart->setTheme(QChart::ChartThemeDark);
+    chart->setTheme(QChart::ChartThemeLight);
 
     main_series = new QLineSeries();
     main_series->setName(price_chart ? "Price" : "Equity");
-    main_series->setPen(QPen(QColor(0, 188, 212), 2));
+    main_series->setPen(QPen(QColor("#1E40AF"), 2));
     chart->addSeries(main_series);
 
     if (is_price_chart) {
         short_ma_series = new QLineSeries();
         short_ma_series->setName("Short MA");
-        short_ma_series->setPen(QPen(QColor(33, 150, 243), 2));
+        short_ma_series->setPen(QPen(QColor("#2563EB"), 2));
         chart->addSeries(short_ma_series);
 
         long_ma_series = new QLineSeries();
         long_ma_series->setName("Long MA");
-        long_ma_series->setPen(QPen(QColor(244, 67, 54), 2));
+        long_ma_series->setPen(QPen(QColor("#94A3B8"), 2));
         chart->addSeries(long_ma_series);
 
         buy_markers = new QScatterSeries();
         buy_markers->setName("Buy (Long)");
-        buy_markers->setColor(QColor(76, 175, 80));
+        buy_markers->setColor(QColor("#16A34A"));
         buy_markers->setMarkerSize(15);
         buy_markers->setMarkerShape(QScatterSeries::MarkerShapeTriangle);
-        buy_markers->setBorderColor(QColor(46, 125, 50));
+        buy_markers->setBorderColor(QColor("#166534"));
         chart->addSeries(buy_markers);
 
         sell_markers = new QScatterSeries();
         sell_markers->setName("Sell (Exit)");
-        sell_markers->setColor(QColor(244, 67, 54));
+        sell_markers->setColor(QColor("#DC2626"));
         sell_markers->setMarkerSize(15);
         sell_markers->setMarkerShape(QScatterSeries::MarkerShapeTriangle);
-        sell_markers->setBorderColor(QColor(198, 40, 40));
+        sell_markers->setBorderColor(QColor("#991B1B"));
         chart->addSeries(sell_markers);
     } else {
         short_ma_series = nullptr;
@@ -105,8 +104,8 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
 
     tooltip_label = new QLabel(this);
     tooltip_label->setStyleSheet(
-        "QLabel { background-color: rgba(0, 0, 0, 180); color: white; "
-        "border: 1px solid white; border-radius: 5px; padding: 5px; "
+        "QLabel { background-color: rgba(17, 24, 39, 230); color: white; "
+        "border: 1px solid #475569; border-radius: 5px; padding: 5px; "
         "font-size: 10pt; }"
     );
     tooltip_label->hide();
@@ -114,20 +113,21 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
 
     metrics_label = new QLabel(this);
     metrics_label->setStyleSheet(
-        "QLabel { background-color: rgba(0, 0, 0, 0); "
-        "border: 2px solid #2196F3; border-radius: 8px; padding: 10px; "
+        "QLabel { background-color: #F8FAFC; color: #111827; "
+        "border: 2px solid #CBD5E1; border-radius: 8px; padding: 10px; "
         "font-size: 9pt; font-weight: bold; }"
     );
     metrics_label->setText("Metrics: N/A");
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    layout = new QVBoxLayout(this);
     layout->addWidget(metrics_label);
     layout->addWidget(chart_view);
     layout->setContentsMargins(5, 5, 5, 5);
     setLayout(layout);
 }
 
-ChartWidget::~ChartWidget() {}
+ChartWidget::~ChartWidget() {
+}
 
 void ChartWidget::add_data_point(double x, double y) {
     x_data.push_back(x);
@@ -180,13 +180,13 @@ void ChartWidget::update_metrics() {
     double min_value = *std::min_element(y_data.begin(), y_data.end());
     double max_value = *std::max_element(y_data.begin(), y_data.end());
     double avg_value = 0.0;
-    for (double val : y_data) {
+    for (double val: y_data) {
         avg_value += val;
     }
     avg_value /= y_data.size();
 
     double variance = 0.0;
-    for (double val : y_data) {
+    for (double val: y_data) {
         variance += (val - avg_value) * (val - avg_value);
     }
     double volatility = std::sqrt(variance / y_data.size());
@@ -199,27 +199,27 @@ void ChartWidget::update_metrics() {
     QString metrics_text;
     if (is_price_chart) {
         metrics_text = QString(
-            "Current: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | Vol: $%5 | Change: %6%"
-        ).arg(current_value, 0, 'f', 2)
-         .arg(min_value, 0, 'f', 2)
-         .arg(max_value, 0, 'f', 2)
-         .arg(avg_value, 0, 'f', 2)
-         .arg(volatility, 0, 'f', 2)
-         .arg(change, 0, 'f', 2);
+                    "Current: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | Vol: $%5 | Change: %6%"
+                ).arg(current_value, 0, 'f', 2)
+                .arg(min_value, 0, 'f', 2)
+                .arg(max_value, 0, 'f', 2)
+                .arg(avg_value, 0, 'f', 2)
+                .arg(volatility, 0, 'f', 2)
+                .arg(change, 0, 'f', 2);
     } else {
         metrics_text = QString(
-            "Portfolio: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | ROI: %5%"
-        ).arg(current_value, 0, 'f', 2)
-         .arg(min_value, 0, 'f', 2)
-         .arg(max_value, 0, 'f', 2)
-         .arg(avg_value, 0, 'f', 2)
-         .arg(change, 0, 'f', 2);
+                    "Portfolio: $%1 | Min: $%2 | Max: $%3 | Avg: $%4 | ROI: %5%"
+                ).arg(current_value, 0, 'f', 2)
+                .arg(min_value, 0, 'f', 2)
+                .arg(max_value, 0, 'f', 2)
+                .arg(avg_value, 0, 'f', 2)
+                .arg(change, 0, 'f', 2);
     }
 
     metrics_label->setText(metrics_text);
 }
 
-QString ChartWidget::format_point_info(const QPointF& point) {
+QString ChartWidget::format_point_info(const QPointF &point) {
     int x_idx = static_cast<int>(std::round(point.x()));
 
     if (x_idx < 0 || x_data.empty()) {
@@ -243,22 +243,22 @@ QString ChartWidget::format_point_info(const QPointF& point) {
     QString info;
     if (is_price_chart && closest_idx < short_ma_data.size()) {
         info = QString(
-            "Time: %1\nPrice: $%2\nShort MA: $%3\nLong MA: $%4"
-        ).arg(static_cast<int>(x_data[closest_idx]))
-         .arg(y_data[closest_idx], 0, 'f', 2)
-         .arg(short_ma_data[closest_idx], 0, 'f', 2)
-         .arg(long_ma_data[closest_idx], 0, 'f', 2);
+                    "Time: %1\nPrice: $%2\nShort MA: $%3\nLong MA: $%4"
+                ).arg(static_cast<int>(x_data[closest_idx]))
+                .arg(y_data[closest_idx], 0, 'f', 2)
+                .arg(short_ma_data[closest_idx], 0, 'f', 2)
+                .arg(long_ma_data[closest_idx], 0, 'f', 2);
     } else if (closest_idx < y_data.size()) {
         info = QString(
-            "Time: %1\nValue: $%2"
-        ).arg(static_cast<int>(x_data[closest_idx]))
-         .arg(y_data[closest_idx], 0, 'f', 2);
+                    "Time: %1\nValue: $%2"
+                ).arg(static_cast<int>(x_data[closest_idx]))
+                .arg(y_data[closest_idx], 0, 'f', 2);
     }
 
     return info;
 }
 
-void ChartWidget::on_point_hovered(const QPointF& point) {
+void ChartWidget::on_point_hovered(const QPointF &point) {
     QString info = format_point_info(point);
 
     if (!info.isEmpty()) {

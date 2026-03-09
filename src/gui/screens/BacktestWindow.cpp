@@ -1,16 +1,19 @@
 #include "BacktestWindow.h"
 #include "ChartWidget.h"
+
+#include "style.h"
+
 #include <QHBoxLayout>
 #include <QSplitter>
 
 BacktestWindow::BacktestWindow(QWidget *parent)
     : QWidget(parent) {
-    QVBoxLayout *main_layout = new QVBoxLayout(this);
+    main_layout = new QVBoxLayout(this);
 
     charts_view = new QWidget();
-    QVBoxLayout *charts_layout = new QVBoxLayout(charts_view);
+    charts_layout = new QVBoxLayout(charts_view);
 
-    QSplitter *splitter = new QSplitter(Qt::Vertical);
+    splitter = new QSplitter(Qt::Vertical);
     equity_chart = new ChartWidget("Portfolio Value", false);
     price_chart = new ChartWidget("Asset Price", true);
 
@@ -19,21 +22,32 @@ BacktestWindow::BacktestWindow(QWidget *parent)
     splitter->setStretchFactor(0, 1);
     splitter->setStretchFactor(1, 1);
 
-    QHBoxLayout *bottom_buttons_layout = new QHBoxLayout();
+    bottom_buttons_layout = new QHBoxLayout();
+
+    back_button = new QPushButton("Back");
+    back_button->setMinimumSize(100, 40);
+    setSecondaryButtonStyle(back_button, 11, true);
+    connect(back_button, &QPushButton::clicked, this, [this] {
+        emit toSelectStrategyScreen();
+    });
 
     pause_button = new QPushButton("Pause");
     pause_button->setMinimumSize(100, 40);
     pause_button->setStyleSheet("font-weight: bold; background-color: #333; color: white;");
-
-    bottom_buttons_layout->addStretch();
+    connect(pause_button, &QPushButton::clicked, this, &BacktestWindow::on_pause_clicked);
 
     show_results_button = new QPushButton("Show Results");
-    show_results_button->setMinimumSize(120, 30);
-    show_results_button->setEnabled(false);
+    show_results_button->setMinimumSize(100, 40);
+    setButtonStyle(show_results_button, colors[0], colors[1], 11, true);
+    connect(show_results_button, &QPushButton::clicked, this, [this] {
+        emit toDoneScreen();
+    });
 
-    bottom_buttons_layout->addWidget(pause_button);
-    bottom_buttons_layout->addWidget(show_results_button);
+    bottom_buttons_layout->addWidget(back_button);
     bottom_buttons_layout->addStretch();
+    bottom_buttons_layout->addWidget(pause_button);
+    bottom_buttons_layout->addStretch();
+    bottom_buttons_layout->addWidget(show_results_button);
 
     charts_layout->addWidget(splitter);
     charts_layout->addLayout(bottom_buttons_layout);

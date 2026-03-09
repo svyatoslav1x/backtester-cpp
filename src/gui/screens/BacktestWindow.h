@@ -6,6 +6,8 @@
 #include <QLabel>
 #include <QStackedWidget>
 #include <QPointer>
+#include <QSplitter>
+#include <QVBoxLayout>
 
 class ChartWidget;
 
@@ -25,6 +27,8 @@ public:
 
 signals:
     void pauseToggled(bool paused);
+    void toDoneScreen();
+    void toSelectStrategyScreen();
 
 private slots:
     void on_pause_clicked();
@@ -38,9 +42,15 @@ private:
     QPointer<ChartWidget> price_chart;
 
     QPointer<QPushButton> pause_button;
+    QPointer<QPushButton> back_button;
     QPointer<QPushButton> show_results_button;
     QPointer<QPushButton> back_to_charts_button;
     QPointer<QLabel> results_label;
+
+    QPointer<QVBoxLayout> main_layout;
+    QPointer<QVBoxLayout> charts_layout;
+    QPointer<QHBoxLayout> bottom_buttons_layout;
+    QPointer<QSplitter> splitter;
 
     double current_price;
     double current_equity;

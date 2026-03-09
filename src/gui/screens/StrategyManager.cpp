@@ -10,32 +10,27 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QDoubleSpinBox>
-#include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
 
-StrategyManager::StrategyManager(QWidget* parent)
-: QWidget(parent) {
+StrategyManager::StrategyManager(QWidget *parent)
+    : QWidget(parent) {
     setup_ui();
-    load_strategies();
 }
 
-StrategyManager::~StrategyManager() {}
+StrategyManager::~StrategyManager() {
+}
 
 void StrategyManager::setup_ui() {
-    setStyleSheet(
-        "QWidget { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1a1a2e, stop:1 #16213e); }"
-    );
-
-    QVBoxLayout* main_layout = new QVBoxLayout(this);
+    main_layout = new QVBoxLayout(this);
     main_layout->setContentsMargins(40, 40, 40, 40);
 
-    QLabel* title = new QLabel("<h1 style='color: #eee;'>📚 Strategy Management</h1>");
+    title = new QLabel("<h1 style='color: #111827;'>📚 Strategy Management</h1>");
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet("background: transparent; font-size: 24pt; font-weight: bold;");
     main_layout->addWidget(title);
 
-    QLabel* subtitle = new QLabel("<p style='color: #aaa;'>View, Edit and Delete Saved Strategies</p>");
+    subtitle = new QLabel("<p style='color: #94A3B8;'>View, Edit and Delete Saved Strategies</p>");
     subtitle->setAlignment(Qt::AlignCenter);
     subtitle->setStyleSheet("background: transparent; font-size: 14pt; margin-bottom: 20px;");
     main_layout->addWidget(subtitle);
@@ -43,29 +38,35 @@ void StrategyManager::setup_ui() {
     main_layout->addSpacing(20);
 
     strategy_list = new QListWidget();
+    strategy_list->setFocusPolicy(Qt::NoFocus);
+    strategy_list->setSelectionMode(QAbstractItemView::NoSelection);
     strategy_list->setStyleSheet(
-        "QListWidget { background-color: #0f3460; color: #eee; border: 2px solid #4CAF50; "
+        "QListWidget { background-color: #FAFFFF; color: #111827; border: 2px solid #CBD5E1; "
         "border-radius: 8px; padding: 10px; font-size: 12pt; }"
-        "QListWidget::item { padding: 10px; border-bottom: 1px solid #2196F3; }"
-        "QListWidget::item:hover { background-color: #1a4d7a; }"
-        "QListWidget::item:selected { background-color: #2196F3; }"
+        "QListWidget::item { background-color: #FFF8FA; padding: 10px; border-bottom: 1px solid #E2E8F0; }"
+        "QListWidget::item:hover { background-color: #F8FAFC; }"
+        "QListWidget::item:selected { background-color: #DBEAFE; }"
     );
     connect(strategy_list, &QListWidget::itemDoubleClicked, this, &StrategyManager::on_list_item_double_clicked);
 
     main_layout->addWidget(strategy_list);
     main_layout->addSpacing(20);
 
-    QHBoxLayout* button_layout = new QHBoxLayout();
+    button_layout = new QHBoxLayout();
 
     back_button = new QPushButton("Back");
     back_button->setMinimumSize(150, 60);
     back_button->setStyleSheet(
-        "QPushButton { background-color: #555; color: white; border: none; "
+        "QPushButton { background-color: #475569; color: #F5F7FA; border: none; "
         "border-radius: 8px; font-size: 16pt; font-weight: bold; }"
-        "QPushButton:hover { background-color: #666; }"
-        "QPushButton:pressed { background-color: #444; }"
+        "QPushButton:hover { background-color: #334155; }"
+        "QPushButton:pressed { background-color: #1F2937; }"
     );
+    connect(back_button, &QPushButton::clicked, this, [this] {
+        emit startScreenSwitch();
+    });
 
+    button_layout->addStretch();
     button_layout->addWidget(back_button);
     button_layout->addStretch();
 
@@ -77,9 +78,10 @@ void StrategyManager::load_strategies() {
 
     QVector<StrategyData> strategies = get_all_strategies();
 
-    for (const StrategyData& strategy : strategies) {
-        QWidget* item_widget = new QWidget();
-        QHBoxLayout* item_layout = new QHBoxLayout(item_widget);
+    for (const StrategyData &strategy: strategies) {
+        item_widget = new QWidget();
+
+        item_layout = new QHBoxLayout(item_widget);
         item_layout->setContentsMargins(5, 5, 5, 5);
 
         QString paramsStr;
@@ -87,38 +89,38 @@ void StrategyManager::load_strategies() {
             paramsStr += QString("%1: %2   ").arg(it.key(), it.value());
         }
 
-        QLabel* info_label = new QLabel(QString("%1 (%2)\n%3").arg(strategy.name).arg(strategy.model_type).arg(paramsStr));
-        info_label->setStyleSheet("background: transparent; color: #eee; font-size: 11pt;");
+        info_label = new QLabel(QString("%1 (%2)\n%3").arg(strategy.name).arg(strategy.model_type).arg(paramsStr));
+        info_label->setStyleSheet("background: transparent; color: #111827; font-size: 11pt;");
         item_layout->addWidget(info_label);
 
         item_layout->addStretch();
 
         int id = strategy.id;
 
-        QPushButton* edit_btn = new QPushButton("Edit");
+        edit_btn = new QPushButton("Edit");
         edit_btn->setFixedSize(60, 20);
         edit_btn->setStyleSheet(
-            "QPushButton { background-color: #0000c9; color: white; border: none; "
+            "QPushButton { background-color: #2563EB; color: white; border: none; "
             "border-radius: 5px; font-size: 8pt; font-weight: bold; }"
-            "QPushButton:hover { background-color: #0000f2; }"
-            "QPushButton:pressed { background-color: #000087; }"
+            "QPushButton:hover { background-color: #1D4ED8; }"
+            "QPushButton:pressed { background-color: #1E40AF; }"
         );
         edit_btn->setEnabled(strategy.is_editable);
         connect(edit_btn, &QPushButton::clicked, [this, id]() { on_edit_clicked(id); });
         item_layout->addWidget(edit_btn);
 
-        QPushButton* delete_btn = new QPushButton("Delete");
+        delete_btn = new QPushButton("Delete");
         delete_btn->setFixedSize(60, 20);
         delete_btn->setStyleSheet(
-            "QPushButton { background-color: #b80000; color: white; border: none; "
+            "QPushButton { background-color: #DC2626; color: white; border: none; "
             "border-radius: 5px; font-size: 8pt; font-weight: bold; }"
-            "QPushButton:hover { background-color: #d60000; }"
-            "QPushButton:pressed { background-color: #600000; }"
+            "QPushButton:hover { background-color: #B91C1C; }"
+            "QPushButton:pressed { background-color: #991B1B; }"
         );
         connect(delete_btn, &QPushButton::clicked, [this, id]() { on_delete_clicked(id); });
         item_layout->addWidget(delete_btn);
 
-        QListWidgetItem* list_item = new QListWidgetItem(strategy_list);
+        QListWidgetItem *list_item = new QListWidgetItem(strategy_list);
         list_item->setSizeHint(QSize(item_widget->sizeHint().width(), 70));
         strategy_list->addItem(list_item);
         strategy_list->setItemWidget(list_item, item_widget);
@@ -187,41 +189,46 @@ void StrategyManager::on_edit_clicked(int id) {
     StrategyData strategy = get_strategy(id);
     if (strategy.id < 0) return;
 
+    if (!strategy.is_editable) {
+        QMessageBox::warning(this, "Error", "This strategy is not editable.");
+        return;
+    }
+
     QDialog dialog(this);
     dialog.setWindowTitle("Edit Strategy");
     dialog.setMinimumWidth(400);
 
-    QVBoxLayout* layout = new QVBoxLayout(&dialog);
-    QFormLayout* form_layout = new QFormLayout();
+    layout = new QVBoxLayout(&dialog);
+    form_layout = new QFormLayout();
 
-    QLineEdit* name_edit = new QLineEdit(strategy.name);
+    name_edit = new QLineEdit(strategy.name);
     form_layout->addRow("Strategy Name:", name_edit);
 
-    QLabel* type_label = new QLabel(strategy.model_type);
+    type_label = new QLabel(strategy.model_type);
     form_layout->addRow("Model Type:", type_label);
 
-    QMap<QString, QSpinBox*> int_spins;
-    QMap<QString, QDoubleSpinBox*> double_spins;
+    QMap<QString, QSpinBox *> int_spins;
+    QMap<QString, QDoubleSpinBox *> double_spins;
 
     for (auto it = strategy.parameters.constBegin(); it != strategy.parameters.constEnd(); ++it) {
         QString key = it.key();
         QString value = it.value();
 
         if (key == "short_window" || key == "long_window") {
-            QSpinBox* spin = new QSpinBox();
+            QSpinBox *spin = new QSpinBox();
             spin->setRange(1, 10000);
             spin->setValue(value.toInt());
             form_layout->addRow(key + ":", spin);
             int_spins[key] = spin;
         } else if (key == "stop_loss_percentage") {
-            QDoubleSpinBox* dspin = new QDoubleSpinBox();
+            QDoubleSpinBox *dspin = new QDoubleSpinBox();
             dspin->setRange(0.0, 100.0);
             dspin->setSingleStep(0.01);
             dspin->setValue(value.toDouble());
             form_layout->addRow(key + ":", dspin);
             double_spins[key] = dspin;
         } else {
-            QSpinBox* spin = new QSpinBox();
+            QSpinBox *spin = new QSpinBox();
             spin->setRange(0, 10000);
             spin->setValue(value.toInt());
             form_layout->addRow(key + ":", spin);
@@ -231,7 +238,7 @@ void StrategyManager::on_edit_clicked(int id) {
 
     layout->addLayout(form_layout);
 
-    QDialogButtonBox* button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(button_box, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(button_box, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
     layout->addWidget(button_box);
@@ -251,7 +258,8 @@ void StrategyManager::on_edit_clicked(int id) {
 
         if (int_spins.contains("short_window") && int_spins.contains("long_window")) {
             if (int_spins["long_window"]->value() <= int_spins["short_window"]->value()) {
-                QMessageBox::warning(this, "Invalid Parameters", "Long MA window must be greater than Short MA window.");
+                QMessageBox::warning(this, "Invalid Parameters",
+                                     "Long MA window must be greater than Short MA window.");
                 return;
             }
         }
@@ -272,7 +280,7 @@ void StrategyManager::on_edit_clicked(int id) {
     }
 }
 
-bool StrategyManager::update_strategy(int id, const QString& name, const QMap<QString, QString>& params) {
+bool StrategyManager::update_strategy(int id, const QString &name, const QMap<QString, QString> &params) {
     QSqlDatabase db = StrategyDatabase::database();
 
     if (!db.transaction()) return false;
@@ -310,7 +318,7 @@ bool StrategyManager::update_strategy(int id, const QString& name, const QMap<QS
     return true;
 }
 
-bool StrategyManager::strategy_name_exists(const QString& name, int excludeId) {
+bool StrategyManager::strategy_name_exists(const QString &name, int excludeId) {
     QSqlDatabase db = StrategyDatabase::database();
     QSqlQuery query(db);
 
@@ -331,7 +339,7 @@ bool StrategyManager::strategy_name_exists(const QString& name, int excludeId) {
     return false;
 }
 
-void StrategyManager::on_list_item_double_clicked(QListWidgetItem* item) {
+void StrategyManager::on_list_item_double_clicked(QListWidgetItem *item) {
     if (item) {
         int id = item->data(Qt::UserRole).toInt();
         on_edit_clicked(id);
@@ -343,8 +351,9 @@ void StrategyManager::on_delete_clicked(int id) {
     if (strategy.id < 0) return;
 
     QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        QString("Are you sure you want to delete strategy '%1'?").arg(strategy.name),
-        QMessageBox::Yes | QMessageBox::No);
+                                                              QString("Are you sure you want to delete strategy '%1'?").
+                                                              arg(strategy.name),
+                                                              QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
         if (remove_strategy(id)) {
@@ -379,7 +388,8 @@ bool StrategyManager::remove_strategy(int id) {
     return true;
 }
 
-bool StrategyManager::add_strategy(const QString& name, const QString& model_type, const QMap<QString, QString>& params) {
+bool StrategyManager::add_strategy(const QString &name, const QString &model_type,
+                                   const QMap<QString, QString> &params) {
     QSqlDatabase db = StrategyDatabase::database();
     if (!db.transaction()) return false;
 
@@ -400,7 +410,8 @@ bool StrategyManager::add_strategy(const QString& name, const QString& model_typ
         QSqlQuery pQuery(db);
         QString valType = (it.key() == "stop_loss_percentage") ? "double" : "int";
 
-        pQuery.prepare("INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable) VALUES (?, ?, ?, ?, 1)");
+        pQuery.prepare(
+            "INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable) VALUES (?, ?, ?, ?, 1)");
         pQuery.addBindValue(strategyId);
         pQuery.addBindValue(it.key());
         pQuery.addBindValue(it.value());

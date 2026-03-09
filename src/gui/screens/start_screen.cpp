@@ -58,9 +58,7 @@ void StartScreen::buildUi() {
     start_button->setMinimumHeight(42);
     start_button->setMinimumWidth(140);
     connect(start_button, &QPushButton::clicked, this, [this] {
-        const QString ds = selectedDataset();
-        if (ds.isEmpty()) return;
-        emit startBacktestSwitch(ds);
+        emit startBacktestSwitch();
     });
     setButtonStyle(start_button, colors[0], colors[1], 11, true);
 

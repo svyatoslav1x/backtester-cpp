@@ -25,7 +25,7 @@ signals:
 
     void createStrategySwitch();
 
-    void startBacktestSwitch(const QString &dataset);
+    void startBacktestSwitch();
 
 private:
     void buildUi();

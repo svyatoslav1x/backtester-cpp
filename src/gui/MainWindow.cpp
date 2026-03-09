@@ -43,10 +43,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     stacked_widget = new QStackedWidget(this); // will have all the widgets and show only one
 
+    if (!StrategyDatabase::initialize()) {
+        QMessageBox::warning(this, "Database Error", "Could not initialize strategies database.");
+    } // initializing the database (vital for program)
+
     start_screen = new StartScreen(this); // screen with news + choice of dataset
     select_strategy_screen = new SelectStrategyScreen(this); // choosing a strategy after which you can start backtest
     create_strategy_screen = new CreateStrategyScreen(this); // screen for creating a custom strategy
     done_screen = new DoneScreen(this); // screen with overall results of backtest
+    edit_strategy_screen = new StrategyManager(this); // screen to edit strategies
+    backtest_screen = new BacktestWindow(this); // screen with charts
 
     stacked_widget->addWidget(start_screen); // 0 - start_screen
     stacked_widget->addWidget(select_strategy_screen); // 1 - select_strategy_screen
@@ -57,10 +63,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     stacked_widget->setCurrentIndex(0); // the first screen is the starting one
     setCentralWidget(stacked_widget); // makes the stacket_widget the main widget for the window
-
-    if (!StrategyDatabase::initialize()) {
-        QMessageBox::warning(this, "Database Error", "Could not initialize strategies database.");
-    } // initializing the database (vital for program)
 
     seedStrategiesIfNeeded();
     // adds the default 2 strategies, todo:when SlavaA does the 3rd strategy add it to database
@@ -76,14 +78,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
     });
 
+    // edit strategy buttons
+    connect(edit_strategy_screen, &StrategyManager::startScreenSwitch, this, [this] {
+        stacked_widget->setCurrentWidget(start_screen);
+    });
+
+    // backtest buttons
+    connect(backtest_screen, &BacktestWindow::toSelectStrategyScreen, this, [this] {
+        stacked_widget->setCurrentWidget(select_strategy_screen);
+    });
+
+    connect(backtest_screen, &BacktestWindow::toDoneScreen, this, [this] {
+        // todo: use done_screen.setResults to set results omg
+        stacked_widget->setCurrentWidget(done_screen);
+    });
+
     // start screen buttons
     connect(start_screen, &StartScreen::createStrategySwitch, this, [this] {
         stacked_widget->setCurrentWidget(create_strategy_screen); // switch from start screen to create screen
     });
 
-    connect(start_screen, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
+    connect(start_screen, &StartScreen::startBacktestSwitch, this, [this] {
         refreshStrategyList(); // refresh the strategy list before switching there
         stacked_widget->setCurrentWidget(select_strategy_screen); // switching to the strategy selecting screen
+    });
+
+    connect(start_screen, &StartScreen::manageStrategiesSwitch, this, [this] {
+        edit_strategy_screen->load_strategies();
+        stacked_widget->setCurrentWidget(edit_strategy_screen);
     });
 
     // create screen buttons
@@ -232,11 +254,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             QMessageBox::warning(this, "Error", "Didn't save selected dataset and strategy.");
             return;
         }
+        stacked_widget->setCurrentWidget(backtest_screen);
     });
 
     // done screen buttons
     connect(done_screen, &DoneScreen::BacktestScreenSwitch, this, [this] {
-        // stacked_widget->setCurrentWidget(); connect to charts (Nikita's part)
+        stacked_widget->setCurrentWidget(backtest_screen);
     });
 
     connect(done_screen, &DoneScreen::StartScreenSwitch, this, [this] {
@@ -271,7 +294,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     )");
     strategyQuery.addBindValue("Default Moving Average");
     strategyQuery.addBindValue("MovingAveragesLongStrategy");
-    strategyQuery.addBindValue(1);
+    strategyQuery.addBindValue(0);
 
     if (!strategyQuery.exec()) {
         db.rollback();
@@ -290,7 +313,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     paramQuery.addBindValue("short_window");
     paramQuery.addBindValue("12");
     paramQuery.addBindValue("int");
-    paramQuery.addBindValue(1);
+    paramQuery.addBindValue(0);
 
     if (!paramQuery.exec()) {
         db.rollback();
@@ -305,7 +328,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     paramQuery.addBindValue("long_window");
     paramQuery.addBindValue("50");
     paramQuery.addBindValue("int");
-    paramQuery.addBindValue(1);
+    paramQuery.addBindValue(0);
 
     if (!paramQuery.exec()) {
         db.rollback();
@@ -318,7 +341,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     )");
     strategyQuery.addBindValue("Default Stop Loss");
     strategyQuery.addBindValue("StopLossStrategy");
-    strategyQuery.addBindValue(1);
+    strategyQuery.addBindValue(0);
 
     if (!strategyQuery.exec()) {
         db.rollback();
@@ -335,7 +358,7 @@ void MainWindow::seedStrategiesIfNeeded() {
     paramQuery.addBindValue("stop_loss_percentage");
     paramQuery.addBindValue("0.95");
     paramQuery.addBindValue("double");
-    paramQuery.addBindValue(1);
+    paramQuery.addBindValue(0);
 
     if (!paramQuery.exec()) {
         db.rollback();
@@ -424,7 +447,8 @@ QString MainWindow::loadApiKeyFromEnvFile() const {
     }
 
     QTextStream in(&file); // stream for reading the file
-    while (!in.atEnd()) { // keep reading until the end of the file
+    while (!in.atEnd()) {
+        // keep reading until the end of the file
         QString line = in.readLine().trimmed(); // read one line and remove surrounding spaces
 
         if (line.startsWith("GNEWS_API_KEY=")) {

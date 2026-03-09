@@ -1,7 +1,7 @@
 #include "StrategyDatabase.h"
 
+#include <qcoreapplication.h>
 #include <QDir>
-#include <QSqlError>
 #include <QSqlQuery>
 #include <QStandardPaths>
 
@@ -10,33 +10,35 @@ QString StrategyDatabase::connectionName() {
 }
 
 QString StrategyDatabase::databasePath() {
-    QDir dir(QDir::currentPath()); // current path will always br "cmake-build-debug"
+    QDir dir(QCoreApplication::applicationDirPath());
 
-    if (dir.dirName() == "cmake-build-debug") {
-        dir.cdUp(); // go to the project directory
+    if (dir.dirName().startsWith("cmake-build")) {
+        dir.cdUp();
     }
 
-    return dir.filePath("data/database/strategies.db"); // save in the folder where this code it
+    if (!dir.exists("data/database")) {
+        dir.mkpath("data/database");
+    }
+
+    return dir.filePath("data/database/strategies.db");
 }
 
 bool StrategyDatabase::openDatabase(QSqlDatabase &db) {
     const QString conn = connectionName();
 
     if (QSqlDatabase::contains(conn)) {
-        // check if the connection already exists
         db = QSqlDatabase::database(conn);
     } else {
-        db = QSqlDatabase::addDatabase("QSQLITE", conn); // if no add it
-        db.setDatabaseName(databasePath());
+        db = QSqlDatabase::addDatabase("QSQLITE", conn);
     }
 
+    db.setDatabaseName(databasePath());
+
     if (db.isOpen()) {
-        // check if the database is already open
         return true;
     }
 
     if (!db.open()) {
-        // trying to open it if its not open already
         return false;
     }
 
@@ -55,7 +57,8 @@ bool StrategyDatabase::createTables(QSqlDatabase &db) {
         )
     )"; // creating a table (the structure of tables is in data/README.md)
 
-    if (!query.exec(createStrategies)) { // trying to execute this request if failed returns false
+    if (!query.exec(createStrategies)) {
+        // trying to execute this request if failed returns false
         return false;
     }
 
@@ -71,7 +74,8 @@ bool StrategyDatabase::createTables(QSqlDatabase &db) {
         )
     )"; // creating a table (the structure of tables is in data/README.md)
 
-    if (!query.exec(createStrategyParameters)) { // trying to execute this request if failed returns false
+    if (!query.exec(createStrategyParameters)) {
+        // trying to execute this request if failed returns false
         return false;
     }
 
@@ -80,14 +84,16 @@ bool StrategyDatabase::createTables(QSqlDatabase &db) {
         ON strategy_parameters(strategy_id, param_key)
     )"; // for one strategy each parameter key can appear only once
 
-    if (!query.exec(createUniqueIndex)) { // trying to execute this request if failed returns false
+    if (!query.exec(createUniqueIndex)) {
+        // trying to execute this request if failed returns false
         return false;
     }
 
     return true;
 }
 
-bool StrategyDatabase::initialize() { // initializes our database (runs the creation of tables)
+bool StrategyDatabase::initialize() {
+    // initializes our database (runs the creation of tables)
     QSqlDatabase db;
     if (!openDatabase(db)) {
         return false;
@@ -97,6 +103,7 @@ bool StrategyDatabase::initialize() { // initializes our database (runs the crea
 }
 
 QSqlDatabase StrategyDatabase::database() {
-    const QString conn = connectionName();
-    return QSqlDatabase::database(conn); // returning access to the database
+    QSqlDatabase db;
+    openDatabase(db);
+    return db;
 }
