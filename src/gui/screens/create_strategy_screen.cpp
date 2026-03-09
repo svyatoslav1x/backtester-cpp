@@ -149,7 +149,7 @@ void CreateStrategyScreen::buildUi() {
 
     button_layout->addStretch();
 
-    save_button = new QPushButton("Save and Use", this); // button to save and get back to main screen
+    save_button = new QPushButton("Save", this); // button to save and get back to main screen
     save_button->setMinimumSize(150, 42);
     setButtonStyle(save_button, colors[0], colors[1], 11, true);
     connect(save_button, &QPushButton::clicked, this, [this] {

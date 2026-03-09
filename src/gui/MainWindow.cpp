@@ -63,7 +63,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     refreshStrategyList(); // makes a list for all the strategies
     loadDatasets(); // gets all the datasets (data/*.csv)
 
-    network_manager = new QNetworkAccessManager(this); // to work with network requests
     setupNewsManager(); // sets up what happens when the news reply comes back
     fetchNews(); // Loads news just when the app starts
 
@@ -75,36 +74,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // start screen buttons
     connect(start_screen, &StartScreen::createStrategySwitch, this, [this] {
-        stacked_widget->setCurrentWidget(create_strategy_screen);
+        stacked_widget->setCurrentWidget(create_strategy_screen); // switch from start screen to create screen
     });
 
     connect(start_screen, &StartScreen::startBacktestSwitch, this, [this](const QString &dataset) {
-        currentSelectedDataset = dataset.trimmed();
-
-        if (currentSelectedDataset.isEmpty()) {
-            QMessageBox::warning(this, "Error", "Choose a dataset");
-            return;
-        }
-
-        refreshStrategyList();
-        stacked_widget->setCurrentWidget(select_strategy_screen);
+        refreshStrategyList(); // refresh the strategy list before switching there
+        stacked_widget->setCurrentWidget(select_strategy_screen); // switching to the strategy selectiong screen
     });
 
     // create screen buttons
     connect(create_strategy_screen, &CreateStrategyScreen::StartScreenSwitch, this, [this] {
-        stacked_widget->setCurrentWidget(start_screen);
+        stacked_widget->setCurrentWidget(start_screen); // from create strategy back to start screen
     });
 
     connect(create_strategy_screen, &CreateStrategyScreen::saveStrategyRequested, this,
             [this](const CreateStrategyInput &input) {
+                // when clicked save
                 if (input.name.trimmed().isEmpty()) {
+                    // check if there is a name
                     QMessageBox::warning(this, "Error", "Strategy name cannot be empty");
                     return;
                 }
 
-                QSqlDatabase db = StrategyDatabase::database();
+                QSqlDatabase db = StrategyDatabase::database(); // get the database connection
 
                 if (!db.transaction()) {
+                    // trying to start a transaction
                     QMessageBox::warning(this, "Error", "Could not start");
                     return;
                 }
@@ -116,10 +111,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     WHERE name = ?
                 )");
                 checkQuery.addBindValue(input.name.trimmed());
-                checkQuery.exec();
+                // since the name isn't static i have to update it through ? and addBindValue interface
+                if (!checkQuery.exec()) {
+                    // execute the sql command with a check
+                    db.rollback();
+                    QMessageBox::warning(this, "Error", "Idk what is this");
+                    return;
+                }
 
                 if (checkQuery.next() && checkQuery.value(0).toInt() > 0) {
-                    db.rollback();
+                    // check if the name is unique
+                    db.rollback(); // rollback to before the transaction
                     QMessageBox::warning(this, "Error", "Not a unique name");
                     return;
                 }
@@ -132,6 +134,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                 strategyQuery.addBindValue(input.name.trimmed());
                 strategyQuery.addBindValue(input.type);
                 strategyQuery.addBindValue(1);
+                // adding the values to the database
 
                 if (!strategyQuery.exec()) {
                     db.rollback();
@@ -139,19 +142,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     return;
                 }
 
-                const int strategyId = strategyQuery.lastInsertId().toInt();
+                const int strategyId = strategyQuery.lastInsertId().toInt(); // to add parameters
                 QSqlQuery paramQuery(db);
 
                 if (input.type == "MovingAveragesLongStrategy") {
+                    // depending on the type of strategy we can adjust different things
                     paramQuery.prepare(R"(
                         INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable)
                         VALUES (?, ?, ?, ?, ?)
                     )");
                     paramQuery.addBindValue(strategyId);
                     paramQuery.addBindValue("short_window");
-                    paramQuery.addBindValue(QString::number(input.shortWindow));
+                    paramQuery.addBindValue(QString::number(input.shortWindow)); // convert to string the number
                     paramQuery.addBindValue("int");
                     paramQuery.addBindValue(1);
+                    // adding the short_window value for the newly created strategy
 
                     if (!paramQuery.exec()) {
                         db.rollback();
@@ -165,9 +170,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     )");
                     paramQuery.addBindValue(strategyId);
                     paramQuery.addBindValue("long_window");
-                    paramQuery.addBindValue(QString::number(input.longWindow));
+                    paramQuery.addBindValue(QString::number(input.longWindow)); // convert to string the number
                     paramQuery.addBindValue("int");
-                    paramQuery.addBindValue(1);
+                    paramQuery.addBindValue(1); // needed for edit strategies screen
+                    // adding the long_window value for the newly created strategy
 
                     if (!paramQuery.exec()) {
                         db.rollback();
@@ -183,7 +189,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     paramQuery.addBindValue("stop_loss_percentage");
                     paramQuery.addBindValue(QString::number(input.stopLossPercentage, 'f', 2));
                     paramQuery.addBindValue("double");
-                    paramQuery.addBindValue(1);
+                    paramQuery.addBindValue(1); // needed for edit strategies screen
 
                     if (!paramQuery.exec()) {
                         db.rollback();
@@ -193,40 +199,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                 }
 
                 if (!db.commit()) {
+                    // commit all the changes and close transaction
+                    db.rollback();
                     QMessageBox::warning(this, "Error", "idk what this is");
                     return;
                 }
 
-                create_strategy_screen->resetForm();
-                refreshStrategyList();
+                create_strategy_screen->resetForm(); // reset every value to default ones
                 stacked_widget->setCurrentWidget(start_screen);
             });
 
     // select screen buttons
     connect(select_strategy_screen, &SelectStrategyScreen::StartScreenSwitch, this, [this] {
-        stacked_widget->setCurrentWidget(start_screen);
+        stacked_widget->setCurrentWidget(start_screen); // when clicked on back
     });
 
     connect(select_strategy_screen, &SelectStrategyScreen::StartBacktestSwitch, this, [this] {
-        const int selectedId = select_strategy_screen->selectedStrategyId();
-        const QString selectedName = select_strategy_screen->selectedStrategyText();
+        const int selectedId = select_strategy_screen->selectedStrategyId(); // get the id of the chosen strategy
 
         if (selectedId < 0) {
+            // return -1 if nothing was chosen
             QMessageBox::warning(this, "Error", "Choose a strategy");
             return;
         }
 
-        if (currentSelectedDataset.trimmed().isEmpty()) {
-            currentSelectedDataset = start_screen ? start_screen->selectedDataset().trimmed() : QString();
-        }
-
-        if (currentSelectedDataset.trimmed().isEmpty()) {
-            QMessageBox::warning(this, "Error", "Choose a dataset");
-            stacked_widget->setCurrentWidget(start_screen);
-            return;
-        }
-
         if (!saveAppState(currentSelectedDataset, selectedId)) {
+            // todo: when linking the whole project make all of this work
             QMessageBox::warning(this, "Error", "Didn`t save selected dataset and strategy.");
             return;
         }
@@ -245,6 +243,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 MainWindow::~MainWindow() = default;
 
 void MainWindow::seedStrategiesIfNeeded() {
+    // add 2-3 main strategies
     QSqlDatabase db = StrategyDatabase::database();
     QSqlQuery countQuery(db);
 
@@ -252,7 +251,7 @@ void MainWindow::seedStrategiesIfNeeded() {
         return;
     }
 
-    if (countQuery.next() && countQuery.value(0).toInt() > 0) {
+    if (countQuery.next() && countQuery.value(0).toInt() >= 2) {
         return;
     }
 
@@ -339,54 +338,39 @@ void MainWindow::seedStrategiesIfNeeded() {
         return;
     }
 
-    db.commit();
+    if (!db.commit()) {
+        // commit all the changes and close transaction
+        db.rollback();
+        QMessageBox::warning(this, "Error", "idk what this is");
+        return;
+    }
 }
 
 void MainWindow::refreshStrategyList() {
-    if (!select_strategy_screen) {
-        return;
-    }
-
     QList<QPair<QString, int> > items;
     QSqlDatabase db = StrategyDatabase::database();
     QSqlQuery query(db);
 
     if (!query.exec("SELECT name, id FROM strategies ORDER BY id ASC")) {
+        // choosing names and ids of strategies
         return;
     }
 
     while (query.next()) {
+        // until i can't stop getting new lines
         items.append({query.value(0).toString(), query.value(1).toInt()});
     }
 
-    select_strategy_screen->setStrategies(items);
+    select_strategy_screen->setStrategies(items); // sets strategies to choose from
 }
 
 void MainWindow::loadDatasets() {
-    if (!start_screen) {
+    QDir dir(QDir::currentPath() + "/../data"); // redirect to the data/ folder
+    if (!dir.exists()) {
         return;
     }
 
-    QStringList datasetNames;
-    QVector<QString> candidateDirs = {
-        QDir::currentPath() + "/data",
-        QDir::currentPath() + "/../data"
-    };
-
-    for (const QString &path: candidateDirs) {
-        QDir dir(path);
-        if (!dir.exists()) {
-            continue;
-        }
-
-        QStringList files = dir.entryList(QStringList() << "*.csv", QDir::Files, QDir::Name);
-        for (const QString &file: files) {
-            if (!datasetNames.contains(file)) {
-                datasetNames.append(file);
-            }
-        }
-    }
-
+    QList<QString> datasetNames = dir.entryList({"*.csv"}, QDir::Files);
     start_screen->setDatasets(datasetNames);
 }
 
@@ -398,19 +382,18 @@ bool MainWindow::saveAppState(const QString &dataset, int strategyId) {
 void MainWindow::setupNewsManager() {
     network_manager = new QNetworkAccessManager(this);
 
-    connect(network_manager, &QNetworkAccessManager::finished,
-            this, &MainWindow::handleNewsReply);
+    connect(network_manager, &QNetworkAccessManager::finished, this, &MainWindow::handleNewsReply);
 }
 
 void MainWindow::fetchNews() {
-    if (last_news_refresh.isValid() &&
-        last_news_refresh.secsTo(QDateTime::currentDateTime()) < 60) {
+    if (last_news_refresh.isValid() && last_news_refresh.secsTo(QDateTime::currentDateTime()) < 60) {
         return;
     }
 
     QUrl url(
         "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
         "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
+    // should have put the apikey in .env but its free so i think it will be overcomplicating
 
     QNetworkRequest request(url);
     network_manager->get(request);
