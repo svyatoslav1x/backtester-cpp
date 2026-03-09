@@ -123,7 +123,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             return;
         }
 
-        QUrl url("hTBST");
+        QUrl url(
+            "https://gnews.io/api/v4/top-headlines?category=business&lang=en"
+            "&country=us&max=3&apikey=6eb3836c9755cb7dcf344da74c41be07");
+        // free api key with 100 запросы per day should actually be put in .env file, but it's a small project so this will do
         QNetworkRequest request(url);
         network_manager->get(request);
     };
