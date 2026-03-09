@@ -1,13 +1,11 @@
 #include "MainWindow.h"
 
-#include <iostream>
+#include "../../data/database/StrategyDatabase.h"
 
 #include "screens/create_strategy_screen.h"
 #include "screens/done_screen.h"
 #include "screens/select_strategy_screen.h"
 #include "screens/start_screen.h"
-
-#include "../../data/database/StrategyDatabase.h"
 
 #include <QDir>
 #include <QGuiApplication>
@@ -25,14 +23,14 @@
 #include <QVector>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    setWindowTitle("Backtester Application");
+    setWindowTitle("Backtester Application"); // window title
 
     QPointer<QScreen> screen = QGuiApplication::primaryScreen();
     QRect screenSize = screen->geometry();
-    int w = screenSize.width();
-    int h = screenSize.height();
-    resize(w * 0.69, h * 0.67);
-    setMinimumSize(760, 520);
+    double w = screenSize.width();
+    double h = screenSize.height();
+    resize(w * 0.69, h * 0.67); // funny numbers
+    setMinimumSize(760, 520); // shouldn't be smaller than this, because to some screens its vital
 
     QLinearGradient gradient(0, 0, w, h);
     gradient.setColorAt(0.0, QColor("#EFEFF0"));
@@ -300,7 +298,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // done screen buttons
     connect(done, &DoneScreen::BacktestScreenSwitch, this, [this] {
-        stacked_widget->setCurrentWidget(select_strategy_screen);
+        // stacked_widget->setCurrentWidget(); connect to charts (nikitas part)
     });
 
     connect(done, &DoneScreen::StartScreenSwitch, this, [this] {

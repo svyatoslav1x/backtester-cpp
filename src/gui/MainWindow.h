@@ -1,18 +1,15 @@
 #ifndef MAIN_WINDOW
 #define MAIN_WINDOW
 
-#include <QStackedWidget>
 #include <QMainWindow>
-#include <QPointer>
-#include <QScreen>
 #include <QNetworkAccessManager>
+#include <QStackedWidget>
 
-#include "screens/start_screen.h"
-#include "screens/select_strategy_screen.h"
 #include "screens/create_strategy_screen.h"
 #include "screens/done_screen.h"
+#include "screens/select_strategy_screen.h"
+#include "screens/start_screen.h"
 
-class QStackedWidget;
 class QWidget;
 
 class MainWindow : public QMainWindow {
@@ -24,30 +21,30 @@ public:
     ~MainWindow() override;
 
 private:
-    // screens
-    QPointer<QStackedWidget> stacked_widget;
+    // setup
+    void loadDatasets();
 
+    void refreshStrategyList();
+
+    void seedStrategiesIfNeeded();
+
+    // save data for backtest
+    bool saveAppState(const QString &dataset, int strategyId);
+
+    QString currentSelectedDataset;
+    QDateTime last_news_refresh;
+
+    // screens
     QPointer<StartScreen> start_screen;
     QPointer<SelectStrategyScreen> select_strategy_screen;
     QPointer<CreateStrategyScreen> create_strategy_screen;
     QPointer<DoneScreen> done_screen;
+    QPointer<QWidget> strategy_screen; // todo:: should be fixed to nikita's class
+    QPointer<QWidget> backtest_screen; // todo:: should be fixed to nikita's class
+    QPointer<QStackedWidget> stacked_widget;
 
-    // todo: change after linked with nikita
-    QPointer<QWidget> strategy_screen;
-    QPointer<QWidget> backtest_screen;
-
-    void seedStrategiesIfNeeded();
-
-    void refreshStrategyList();
-
-    void loadDatasets();
-
-    bool saveAppState(const QString &dataset, int strategyId);
-
-    QString currentSelectedDataset;
-
+    // news
     QPointer<QNetworkAccessManager> network_manager;
-    QDateTime last_news_refresh;
 };
 
 #endif //MAIN_WINDOW
