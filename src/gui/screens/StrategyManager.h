@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QMap>
 #include <QVector>
+#include <QPointer>
 
 struct StrategyData {
     int id;
@@ -20,8 +21,8 @@ struct StrategyData {
 class StrategyManager : public QWidget {
     Q_OBJECT
 
-    QListWidget* strategy_list;
-    QPushButton* back_button;
+    QPointer<QListWidget> strategy_list;
+    QPointer<QPushButton> back_button;
 
     void setup_ui();
     void load_strategies();

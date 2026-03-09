@@ -8,6 +8,7 @@
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QChart>
 #include <QtCharts/QScatterSeries>
+#include <QPointer>
 
 class InteractiveChartView : public QChartView {
     Q_OBJECT
@@ -27,17 +28,17 @@ class ChartWidget : public QWidget {
     Q_OBJECT
 
 private:
-    InteractiveChartView* chart_view;
-    QChart* chart;
-    QLineSeries* main_series;
-    QLineSeries* short_ma_series;
-    QLineSeries* long_ma_series;
-    QValueAxis* axis_x;
-    QValueAxis* axis_y;
-    QLabel* tooltip_label;
-    QLabel* metrics_label;
-    QScatterSeries* buy_markers;
-    QScatterSeries* sell_markers;
+    QPointer<InteractiveChartView> chart_view;
+    QPointer<QChart> chart;
+    QPointer<QLineSeries> main_series;
+    QPointer<QLineSeries> short_ma_series;
+    QPointer<QLineSeries> long_ma_series;
+    QPointer<QValueAxis> axis_x;
+    QPointer<QValueAxis> axis_y;
+    QPointer<QLabel> tooltip_label;
+    QPointer<QLabel> metrics_label;
+    QPointer<QScatterSeries> buy_markers;
+    QPointer<QScatterSeries> sell_markers;
 
     std::vector<double> x_data;
     std::vector<double> y_data;
