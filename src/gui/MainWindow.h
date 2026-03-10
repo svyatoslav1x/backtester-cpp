@@ -6,61 +6,57 @@
 #include <QStackedWidget>
 
 #include "screens/BacktestWindow.h"
+#include "screens/SimulationEngine.h"
+#include "screens/StrategyManager.h"
 #include "screens/create_strategy_screen.h"
 #include "screens/done_screen.h"
 #include "screens/select_strategy_screen.h"
 #include "screens/start_screen.h"
-#include "screens/StrategyManager.h"
 
 class QWidget;
 
 class MainWindow : public QMainWindow {
-    Q_OBJECT
-
+	Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+	explicit MainWindow(QWidget* parent = nullptr);
 
-    ~MainWindow() override;
-
+	~MainWindow() override;
 private:
-    // setup
-    void loadDatasets() const;
+	// setup
+	void loadDatasets() const;
+	void refreshStrategyList() const;
+	void seedStrategiesIfNeeded();
+	QString loadApiKeyFromEnvFile() const;
 
-    void refreshStrategyList() const;
+	// save data for backtest
+	bool saveAppState(const QString& dataset, int strategyId);
 
-    void seedStrategiesIfNeeded();
+	QString currentSelectedDataset;
+	QDateTime last_news_refresh;
 
-    QString loadApiKeyFromEnvFile() const;
+	// screens
+	QPointer<QScreen> screen;
+	QRect screenSize;
+	QPointer<StartScreen> start_screen;
+	QPointer<SelectStrategyScreen> select_strategy_screen;
+	QPointer<CreateStrategyScreen> create_strategy_screen;
+	QPointer<DoneScreen> done_screen;
+	QPointer<StrategyManager> edit_strategy_screen;
+	QPointer<BacktestWindow> backtest_screen;
+	QPointer<QStackedWidget> stacked_widget;
 
-    // save data for backtest
-    bool saveAppState(const QString &dataset, int strategyId);
+	// simulation engine
+	SimulationEngine* simulation_engine;
 
-    QString currentSelectedDataset;
-    QDateTime last_news_refresh;
+	// different helpers
+	QLinearGradient gradient;
+	QPalette palette;
 
-    // screens
-    QPointer<QScreen> screen;
-    QRect screenSize;
-    QPointer<StartScreen> start_screen;
-    QPointer<SelectStrategyScreen> select_strategy_screen;
-    QPointer<CreateStrategyScreen> create_strategy_screen;
-    QPointer<DoneScreen> done_screen;
-    QPointer<StrategyManager> edit_strategy_screen;
-    QPointer<BacktestWindow> backtest_screen;
-    QPointer<QStackedWidget> stacked_widget;
-
-    // different helpers
-    QLinearGradient gradient;
-    QPalette palette;
-
-    // news
-    QPointer<QNetworkAccessManager> network_manager;
-
-    void setupNewsManager();
-
-    void fetchNews() const;
-
-    void handleNewsReply(QNetworkReply *reply);
+	// news
+	QPointer<QNetworkAccessManager> network_manager;
+	void setupNewsManager();
+	void fetchNews() const;
+	void handleNewsReply(QNetworkReply* reply);
 };
 
-#endif //MAIN_WINDOW
+#endif // MAIN_WINDOW

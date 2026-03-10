@@ -68,6 +68,7 @@ public:
 
 	void calculate_signals(const Event& event) override;
 	void plot() override;
+	std::map<std::string, double> get_indicators() const override;
 };
 
 // Momentum Position Sizing
@@ -95,4 +96,5 @@ public:
 
 	void calculate_signals(const Event& event) override;
 	void plot() override;
+	std::map<std::string, double> get_indicators() const override;
 };

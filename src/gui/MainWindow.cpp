@@ -23,6 +23,13 @@
 #include <QUrlQuery>
 #include <QVector>
 
+#include "../../include/backtester.h"
+#include "../../include/data.h"
+#include "../../include/execution.h"
+#include "../../include/portfolio.h"
+#include "../../strategies/macd.h"
+#include "../../strategies/stop_loss.h"
+
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 	setWindowTitle("Backtester Application"); // window title
 
@@ -72,6 +79,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
 	setupNewsManager(); // sets up what happens when the news reply comes back
 	fetchNews(); // Loads news just when the app starts
+
+	simulation_engine = nullptr;
 
 	connect(stacked_widget, &QStackedWidget::currentChanged, this, [this](int index) {
 		if (index == 0) {
@@ -241,56 +250,90 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 		stacked_widget->setCurrentWidget(start_screen); // when clicked on back
 	});
 
+	// THE CORE INTEGRATION
 	connect(select_strategy_screen, &SelectStrategyScreen::StartBacktestSwitch, this, [this] {
-		const int selectedId = select_strategy_screen->selectedStrategyId();
-		QString csvFile = start_screen->selectedDataset(); // e.g., "AAPL.csv"
-		QString ticker = csvFile.replace(".csv", "");
+		backtest_screen->resetUI();
 
-		if (selectedId < 0 || ticker.isEmpty()) {
-			QMessageBox::warning(this, "Error", "Selection incomplete.");
+		const int selectedId = select_strategy_screen->selectedStrategyId();
+		QString dataset_file = start_screen->selectedDataset();
+
+		if (selectedId < 0 || dataset_file.isEmpty() || dataset_file == "No datasets found") {
+			QMessageBox::warning(this, "Selection Incomplete",
+								 "Please select a valid dataset and a strategy.");
 			return;
 		}
 
-		// 1. Instantiate Backend
-		auto events = std::make_shared<std::queue<std::unique_ptr<Event>>>();
-		auto dh = std::make_unique<HistoricCSVDataHandler>(*events, "../data",
-														   std::vector<std::string>{ticker.toStdString()});
-		auto port = std::make_unique<NaivePortfolio>(*dh, *events, "GUI_Run", 100000.0);
-		auto exec = std::make_unique<SimulatedExecutionHandler>(*events);
-
-		auto bt = std::make_unique<Backtester>(events, std::move(dh), std::move(port), std::move(exec));
-
-		// 2. Load Strategy from DB and set in Backtester
-		StrategyData dbData = edit_strategy_screen->get_strategy(selectedId);
-		if (dbData.model_type == "MovingAveragesLongStrategy") {
-			int s = dbData.parameters["short_window"].toInt();
-			int l = dbData.parameters["long_window"].toInt();
-			bt->set_strategy(std::make_unique<MovingAveragesLongStrategy>(
-				bt->get_data_handler(), bt->get_events(), bt->get_portfolio(), s, l));
-		} else {
-			double sl = dbData.parameters["stop_loss_percentage"].toDouble();
-			bt->set_strategy(std::make_unique<StopLossStrategy>(bt->get_data_handler(), bt->get_events(),
-																bt->get_portfolio(), sl));
+		// clean up any previous simulation engine to prevent memory leaks and dangling connections
+		if (simulation_engine) {
+			simulation_engine->deleteLater(); // use Qt's safe deletion
 		}
 
-		// 3. Link Engine and Switch Screen
-		// Assuming you have a pointer to SimulationEngine in your BacktestWindow
-		SimulationEngine* engine = new SimulationEngine(this); // Or managed by BacktestWindow
-		engine->setup(std::move(bt), ticker.toStdString());
+		// create a FRESH engine for this specific run
+		simulation_engine = new SimulationEngine(this);
 
-		// Connect Engine to Chart Widgets
-		connect(engine, &SimulationEngine::priceUpdated, backtest_screen, &BacktestWindow::add_data_point);
-		connect(engine, &SimulationEngine::equityUpdated, backtest_screen, &BacktestWindow::add_equity_point);
-		connect(engine, &SimulationEngine::maUpdated, backtest_screen, &BacktestWindow::add_ma_point);
-		connect(engine, &SimulationEngine::signalUpdated, backtest_screen,
-				&BacktestWindow::add_signal_marker);
-		connect(engine, &SimulationEngine::simulationFinished, this, [this](const QString& res) {
-			// Logic to update DoneScreen with results
-			stacked_widget->setCurrentWidget(done_screen);
-		});
+		try {
+			std::string symbol = dataset_file.replace(".csv", "").toStdString();
+			std::string csv_dir = "data";
 
-		stacked_widget->setCurrentWidget(backtest_screen);
-		engine->startSimulation();
+			auto events = std::make_shared<std::queue<std::unique_ptr<Event>>>();
+			auto dh =
+				std::make_unique<HistoricCSVDataHandler>(*events, csv_dir, std::vector<std::string>{symbol});
+			auto port = std::make_unique<NaivePortfolio>(*dh, *events, "GUI_Run", 100000.0);
+			auto exec = std::make_unique<SimulatedExecutionHandler>(*events);
+
+			auto bt = std::make_unique<Backtester>(events, std::move(dh), std::move(port), std::move(exec));
+
+			StrategyData strat_data = edit_strategy_screen->get_strategy(selectedId);
+			std::unique_ptr<Strategy> strategy_instance;
+
+			if (strat_data.model_type == "MovingAveragesLongStrategy") {
+				int s_win = strat_data.parameters.value("short_window", "12").toInt();
+				int l_win = strat_data.parameters.value("long_window", "50").toInt();
+				strategy_instance = std::make_unique<MovingAveragesLongStrategy>(
+					bt->get_data_handler(), bt->get_events(), bt->get_portfolio(), s_win, l_win);
+			} else if (strat_data.model_type == "StopLossStrategy") {
+				double sl_pct = strat_data.parameters.value("stop_loss_percentage", "0.95").toDouble();
+				strategy_instance = std::make_unique<StopLossStrategy>(
+					bt->get_data_handler(), bt->get_events(), bt->get_portfolio(), sl_pct);
+			} else {
+				QMessageBox::warning(this, "Error",
+									 "Unknown Strategy Type in Database: " + strat_data.model_type);
+				simulation_engine->deleteLater(); // clean up if strategy fails
+				simulation_engine = nullptr;
+				return;
+			}
+
+			bt->set_strategy(std::move(strategy_instance));
+			simulation_engine->setup(std::move(bt), symbol);
+
+			// connect signals from the NEWLY created engine
+			connect(simulation_engine, &SimulationEngine::priceUpdated, backtest_screen,
+					&BacktestWindow::add_data_point);
+			connect(simulation_engine, &SimulationEngine::equityUpdated, backtest_screen,
+					&BacktestWindow::add_equity_point);
+			connect(simulation_engine, &SimulationEngine::maUpdated, backtest_screen,
+					&BacktestWindow::add_ma_point);
+			connect(simulation_engine, &SimulationEngine::signalUpdated, backtest_screen,
+					&BacktestWindow::add_signal_marker);
+			connect(backtest_screen, &BacktestWindow::pauseToggled, simulation_engine,
+					&SimulationEngine::setPaused);
+
+			connect(simulation_engine, &SimulationEngine::simulationFinished, this,
+					[this](const QString& stats) {
+						done_screen->setResults(stats);
+						stacked_widget->setCurrentWidget(done_screen);
+					});
+
+			stacked_widget->setCurrentWidget(backtest_screen);
+			simulation_engine->startSimulation();
+
+		} catch (const std::exception& e) {
+			QMessageBox::critical(this, "Backtest Error", QString("Failed to start backtest:\n") + e.what());
+			if (simulation_engine) {
+				simulation_engine->deleteLater(); // clean up on failure
+				simulation_engine = nullptr;
+			}
+		}
 	});
 
 	// done screen buttons
@@ -435,10 +478,10 @@ void MainWindow::loadDatasets() const {
 	start_screen->setDatasets(datasetNames);
 }
 
-bool MainWindow::saveAppState(const QString& dataset, int strategyId) {
-	// todo:: link this with the rest of the code so that it can be used for models
-	return true;
-}
+// bool MainWindow::saveAppState(const QString& dataset, int strategyId) {
+// 	// todo:: link this with the rest of the code so that it can be used for models
+// 	return true;
+// }
 
 void MainWindow::setupNewsManager() {
 	network_manager = new QNetworkAccessManager(this);

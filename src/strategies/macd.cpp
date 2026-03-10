@@ -1,5 +1,6 @@
 #include "macd.h"
 #include <cmath>
+#include <numbers>
 
 const double PI = 3.14159265358979323846;
 
@@ -69,9 +70,18 @@ void MovingAveragesLongStrategy::plot() {}
 
 std::map<std::string, double> MovingAveragesLongStrategy::get_indicators() const {
 	std::map<std::string, double> indicators;
-	// active_symbol needs to be tracked or passed
-	indicators["Short EMA"] = short_ema.at(symbol_list[0]);
-	indicators["Long EMA"] = long_ema.at(symbol_list[0]);
+
+	// symbol_list[0] is the active ticker
+	std::string symbol = symbol_list[0];
+
+	// only return values if we have actually started calculating them
+	if (bars_processed.at(symbol) >= short_period) {
+		indicators["Short EMA"] = short_ema.at(symbol);
+	}
+	if (bars_processed.at(symbol) >= long_period) {
+		indicators["Long EMA"] = long_ema.at(symbol);
+	}
+
 	return indicators;
 }
 
@@ -144,6 +154,20 @@ void MovingAveragesLongShortStrategy::calculate_signals(const Event& event) {
 
 void MovingAveragesLongShortStrategy::plot() {}
 
+std::map<std::string, double> MovingAveragesLongShortStrategy::get_indicators() const {
+	std::map<std::string, double> indicators;
+	std::string symbol = symbol_list[0];
+
+	if (bars_processed.at(symbol) >= short_period) {
+		indicators["Short EMA"] = short_ema.at(symbol);
+	}
+	if (bars_processed.at(symbol) >= long_period) {
+		indicators["Long EMA"] = long_ema.at(symbol);
+	}
+
+	return indicators;
+}
+
 MovingAveragesMomentumStrategy::MovingAveragesMomentumStrategy(DataHandler& data,
 															   std::queue<std::unique_ptr<Event>>& events,
 															   Portfolio& portfolio,
@@ -211,3 +235,17 @@ void MovingAveragesMomentumStrategy::calculate_signals(const Event& event) {
 }
 
 void MovingAveragesMomentumStrategy::plot() {}
+
+std::map<std::string, double> MovingAveragesMomentumStrategy::get_indicators() const {
+	std::map<std::string, double> indicators;
+	std::string symbol = symbol_list[0];
+
+	if (bars_processed.at(symbol) >= short_period) {
+		indicators["Short EMA"] = short_ema.at(symbol);
+	}
+	if (bars_processed.at(symbol) >= long_period) {
+		indicators["Long EMA"] = long_ema.at(symbol);
+	}
+
+	return indicators;
+}
