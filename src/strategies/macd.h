@@ -37,6 +37,9 @@ public:
 
 	void calculate_signals(const Event& event) override;
 	void plot() override;
+	std::map<std::string, double> get_indicators() const override;
+	double get_short_ema(const std::string& sym) { return short_ema[sym]; }
+	double get_long_ema(const std::string& sym) { return long_ema[sym]; }
 };
 
 // Long and Short

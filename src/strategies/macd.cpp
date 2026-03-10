@@ -67,6 +67,14 @@ void MovingAveragesLongStrategy::calculate_signals(const Event& event) {
 
 void MovingAveragesLongStrategy::plot() {}
 
+std::map<std::string, double> MovingAveragesLongStrategy::get_indicators() const {
+	std::map<std::string, double> indicators;
+	// active_symbol needs to be tracked or passed
+	indicators["Short EMA"] = short_ema.at(symbol_list[0]);
+	indicators["Long EMA"] = long_ema.at(symbol_list[0]);
+	return indicators;
+}
+
 MovingAveragesLongShortStrategy::MovingAveragesLongShortStrategy(DataHandler& data,
 																 std::queue<std::unique_ptr<Event>>& events,
 																 Portfolio& portfolio,

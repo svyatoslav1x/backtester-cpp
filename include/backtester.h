@@ -27,6 +27,8 @@ public:
 	// the core loop
 	void run();
 
+	bool step(); // Processes one bar. Returns false if no data left.
+
 	// set the strategy (can be changed between runs)
 	void set_strategy(std::unique_ptr<Strategy> new_strategy);
 
@@ -34,4 +36,5 @@ public:
 	DataHandler& get_data_handler() { return *data_handler; }
 	Portfolio& get_portfolio() { return *portfolio; }
 	std::queue<std::unique_ptr<Event>>& get_events() { return *events; }
+	Strategy* get_strategy() { return strategy.get(); } // To extract indicator values
 };

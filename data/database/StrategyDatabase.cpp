@@ -1,54 +1,52 @@
 #include "StrategyDatabase.h"
 
-#include <qcoreapplication.h>
 #include <QDir>
 #include <QSqlQuery>
 #include <QStandardPaths>
+#include <qcoreapplication.h>
 
-QString StrategyDatabase::connectionName() {
-    return "strategy_database_connection";
-}
+QString StrategyDatabase::connectionName() { return "strategy_database_connection"; }
 
 QString StrategyDatabase::databasePath() {
-    QDir dir(QCoreApplication::applicationDirPath());
+	QDir dir(QCoreApplication::applicationDirPath());
 
-    if (dir.dirName().startsWith("cmake-build")) {
-        dir.cdUp();
-    }
+	if (dir.dirName().startsWith("cmake-build")) {
+		dir.cdUp();
+	}
 
-    if (!dir.exists("data/database")) {
-        dir.mkpath("data/database");
-    }
+	if (!dir.exists("data/database")) {
+		dir.mkpath("data/database");
+	}
 
-    return dir.filePath("data/database/strategies.db");
+	return dir.filePath("data/database/strategies.db");
 }
 
-bool StrategyDatabase::openDatabase(QSqlDatabase &db) {
-    const QString conn = connectionName();
+bool StrategyDatabase::openDatabase(QSqlDatabase& db) {
+	const QString conn = connectionName();
 
-    if (QSqlDatabase::contains(conn)) {
-        db = QSqlDatabase::database(conn);
-    } else {
-        db = QSqlDatabase::addDatabase("QSQLITE", conn);
-    }
+	if (QSqlDatabase::contains(conn)) {
+		db = QSqlDatabase::database(conn);
+	} else {
+		db = QSqlDatabase::addDatabase("QSQLITE", conn);
+	}
 
-    db.setDatabaseName(databasePath());
+	db.setDatabaseName(databasePath());
 
-    if (db.isOpen()) {
-        return true;
-    }
+	if (db.isOpen()) {
+		return true;
+	}
 
-    if (!db.open()) {
-        return false;
-    }
+	if (!db.open()) {
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
-bool StrategyDatabase::createTables(QSqlDatabase &db) {
-    QSqlQuery query(db); // an object to run the sql commands on
+bool StrategyDatabase::createTables(QSqlDatabase& db) {
+	QSqlQuery query(db); // an object to run the sql commands on
 
-    const QString createStrategies = R"(
+	const QString createStrategies = R"(
         CREATE TABLE IF NOT EXISTS strategies (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
@@ -57,12 +55,12 @@ bool StrategyDatabase::createTables(QSqlDatabase &db) {
         )
     )"; // creating a table (the structure of tables is in data/README.md)
 
-    if (!query.exec(createStrategies)) {
-        // trying to execute this request if failed returns false
-        return false;
-    }
+	if (!query.exec(createStrategies)) {
+		// trying to execute this request if failed returns false
+		return false;
+	}
 
-    const QString createStrategyParameters = R"(
+	const QString createStrategyParameters = R"(
         CREATE TABLE IF NOT EXISTS strategy_parameters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             strategy_id INTEGER NOT NULL,
@@ -74,36 +72,36 @@ bool StrategyDatabase::createTables(QSqlDatabase &db) {
         )
     )"; // creating a table (the structure of tables is in data/README.md)
 
-    if (!query.exec(createStrategyParameters)) {
-        // trying to execute this request if failed returns false
-        return false;
-    }
+	if (!query.exec(createStrategyParameters)) {
+		// trying to execute this request if failed returns false
+		return false;
+	}
 
-    const QString createUniqueIndex = R"(
+	const QString createUniqueIndex = R"(
         CREATE UNIQUE INDEX IF NOT EXISTS idx_strategy_param_unique
         ON strategy_parameters(strategy_id, param_key)
     )"; // for one strategy each parameter key can appear only once
 
-    if (!query.exec(createUniqueIndex)) {
-        // trying to execute this request if failed returns false
-        return false;
-    }
+	if (!query.exec(createUniqueIndex)) {
+		// trying to execute this request if failed returns false
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 bool StrategyDatabase::initialize() {
-    // initializes our database (runs the creation of tables)
-    QSqlDatabase db;
-    if (!openDatabase(db)) {
-        return false;
-    }
+	// initializes our database (runs the creation of tables)
+	QSqlDatabase db;
+	if (!openDatabase(db)) {
+		return false;
+	}
 
-    return createTables(db);
+	return createTables(db);
 }
 
 QSqlDatabase StrategyDatabase::database() {
-    QSqlDatabase db;
-    openDatabase(db);
-    return db;
+	QSqlDatabase db;
+	openDatabase(db);
+	return db;
 }

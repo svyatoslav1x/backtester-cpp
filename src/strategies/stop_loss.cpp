@@ -63,3 +63,9 @@ void StopLossStrategy::calculate_signals(const Event& event) {
 }
 
 void StopLossStrategy::plot() {}
+
+std::map<std::string, double> StopLossStrategy::get_indicators() const {
+	std::map<std::string, double> indicators;
+	indicators["Stop Level"] = stop_loss.at(symbol_list[0]);
+	return indicators;
+}
