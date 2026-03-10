@@ -1,0 +1,103 @@
+#include "SimulationEngine.h"
+
+SimulationEngine::SimulationEngine(QObject* parent) : QObject(parent), time_step(0), last_position(0) {
+	// connect the QTimer's timeout to the step function
+	connect(&timer, &QTimer::timeout, this, &SimulationEngine::simulateStep);
+}
+
+void SimulationEngine::startSimulation() {
+	if (!backtester)
+		return;
+
+	// pre-fill the first 50 data points instantly so the chart isn't empty on load
+	for (int i = 0; i < 50; ++i) {
+		simulateStep();
+	}
+
+	// start periodic updates (e.g., 50ms per tick for smooth visualization)
+	timer.start(50);
+}
+
+void SimulationEngine::setup(std::unique_ptr<Backtester> bt, const std::string& symbol) {
+	backtester = std::move(bt);
+	active_symbol = symbol;
+	time_step = 0;
+	last_position = 0;
+}
+
+void SimulationEngine::simulateStep() {
+	if (!backtester || !backtester->step()) {
+		timer.stop();
+
+		QString final_stats = "No data processed.";
+		if (backtester) {
+			// extract final summary stats from Portfolio
+			auto& port = static_cast<NaivePortfolio&>(backtester->get_portfolio());
+			auto stats = port.summary_stats();
+
+			// format into a single string for DoneScreen
+			final_stats = "";
+			for (const auto& stat : stats) {
+				final_stats +=
+					QString::fromStdString(stat.first) + ": " + QString::fromStdString(stat.second) + "\n";
+			}
+		}
+
+		emit simulationFinished(final_stats);
+		return;
+	}
+
+	auto& dh = backtester->get_data_handler();
+	auto& port = static_cast<NaivePortfolio&>(backtester->get_portfolio());
+	auto* strat = backtester->get_strategy();
+
+	// get latest price
+	auto bars = dh.get_latest_bars(active_symbol, 1);
+	if (bars.empty())
+		return;
+	double price = bars[0].close;
+
+	// get current pos
+	int current_pos = port.get_position(active_symbol);
+
+	// calculate total equity: cash + (position * current price)
+	double equity = port.get_cash() + (current_pos * price);
+
+	if (current_pos > last_position) {
+		emit signalUpdated(time_step, price, true); // buy marker
+	} else if (current_pos < last_position) {
+		emit signalUpdated(time_step, price, false); // sell marker
+	}
+	last_position = current_pos;
+
+	double short_ma = 0.0;
+	double long_ma = 0.0;
+
+	if (strat) {
+		auto indicators = strat->get_indicators();
+
+		if (indicators.count("Short EMA") && indicators.count("Long EMA")) {
+			short_ma = indicators["Short EMA"];
+			long_ma = indicators["Long EMA"];
+		} else if (indicators.count("Stop Level")) {
+			long_ma = indicators["Stop Level"];
+		}
+	}
+
+	emit priceUpdated(time_step, price);
+	emit equityUpdated(time_step, equity);
+
+	if (short_ma > 0 || long_ma > 0) {
+		emit maUpdated(time_step, short_ma, long_ma);
+	}
+
+	time_step++;
+}
+
+void SimulationEngine::setPaused(bool isPaused) {
+	if (isPaused) {
+		timer.stop();
+	} else {
+		timer.start(50);
+	}
+}
