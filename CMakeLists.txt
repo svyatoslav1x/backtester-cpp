@@ -1,30 +1,32 @@
-# =============================================================================
-# Project Configuration
-# =============================================================================
 cmake_minimum_required(VERSION 3.16)
 project(backtester-cpp LANGUAGES CXX)
 
+set(CMAKE_PREFIX_PATH "usr/lib/qt")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # it is used to generate compile_commands.json for clangd
 # set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# =============================================================================
-# Find Qt6 Libraries
-# =============================================================================
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
+# Create the executable
+add_executable(backtester-cpp ${SOURCES})
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
 
-# Create the executable
-add_executable(backtester-cpp src/main.cpp)
+# =============================================================================
+# Find Qt6 Libraries
+# =============================================================================
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network Sql Charts)
+
 
 # =============================================================================
 # Source Files
 # =============================================================================
+set(SOURCES
+        src/main.cpp
+        data/database/StrategyDatabase.cpp
+)
 
 # --- Backend Core Files ---
 target_sources(backtester-cpp PRIVATE
@@ -44,11 +46,17 @@ target_sources(backtester-cpp PRIVATE
 
 # --- Qt Files (GUI) ---
 target_sources(backtester-cpp PRIVATE
-    # src/qt_app/MainWindow.cpp
-    # src/qt_app/DashboardPanel.cpp
-    # src/qt_app/ChartingPanel.cpp
-    # src/qt_app/BacktesterWorker.cpp
-    # src/qt_app/resources/resources.qrc
+    src/gui/screens/StrategyManager.cpp
+    src/gui/screens/StrategyManager.h
+    src/gui/screens/ChartWidget.cpp
+    src/gui/screens/BacktestWindow.cpp
+    src/gui/screens/SimulationEngine.cpp
+    src/gui/MainWindow.cpp
+    src/gui/screens/start_screen.cpp
+    src/gui/screens/select_strategy_screen.cpp
+    src/gui/screens/create_strategy_screen.cpp
+    src/gui/screens/done_screen.cpp
+    src/gui/screens/style.h
 )
 
 # =============================================================================
@@ -63,17 +71,14 @@ target_include_directories(backtester-cpp PRIVATE
 # =============================================================================
 # Link Libraries
 # =============================================================================
-target_link_libraries(backtester-cpp PRIVATE
-    Qt6::Widgets
-    Qt6::Core
-    Qt6::Gui
+target_link_libraries(Backtester PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Network
+        Qt6::Sql
+        Qt6::Charts
 )
-
-# =============================================================================
-# Data Files Management
-# =============================================================================
-# Copy the 'data' folder to the build directory so the app can find CSVs
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # =============================================================================
 # Platform Specifics

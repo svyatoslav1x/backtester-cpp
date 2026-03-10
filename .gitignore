@@ -73,3 +73,8 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# alex's additions
+.idea/
+*.db
+*.env

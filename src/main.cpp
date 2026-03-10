@@ -2,7 +2,9 @@
 #include "../include/data.h"
 #include "../include/execution.h"
 #include "../include/portfolio.h"
+#include "gui/MainWindow.h"
 #include "strategies/macd.h"
+#include <QApplication>
 #include <memory>
 #include <queue>
 
@@ -23,6 +25,13 @@ int main() {
 	bt.set_strategy(std::move(macd_strategy));
 
 	bt.run();
+
+	QApplication app(argc, argv);
+
+	MainWindow w;
+	w.show();
+
+	return app.exec();
 
 	return 0;
 }
