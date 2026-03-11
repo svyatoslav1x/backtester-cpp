@@ -75,6 +75,14 @@ int SelectStrategyScreen::selectedStrategyId() const {
     return strategy_combo ? strategy_combo->currentData().toInt() : -1;
 }
 
-QString SelectStrategyScreen::selectedStrategyText() const {
-    return strategy_combo ? strategy_combo->currentText() : QString();
+QComboBox *SelectStrategyScreen::strategyCombo() const {
+    return strategy_combo;
+}
+
+QPushButton *SelectStrategyScreen::backButton() const {
+    return back_button;
+}
+
+QPushButton *SelectStrategyScreen::startBacktestButton() const {
+    return next_button;
 }

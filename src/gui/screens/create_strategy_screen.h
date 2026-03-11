@@ -16,7 +16,6 @@ struct CreateStrategyInput {
     int shortWindow = 20;
     int longWindow = 50;
     double stopLossPercentage = 0.90;
-    // todo: add svyat's strategy
 };
 
 class CreateStrategyScreen : public QWidget {
@@ -30,6 +29,20 @@ public:
     void resetForm();
 
     void updateParameterVisibility();
+
+    QLineEdit *nameEdit() const;
+
+    QComboBox *typeCombo() const;
+
+    QSpinBox *shortWindowSpin() const;
+
+    QSpinBox *longWindowSpin() const;
+
+    QDoubleSpinBox *stopLossSpin() const;
+
+    QPushButton *saveButton() const;
+
+    QPushButton *backButton() const;
 
 private:
     void buildUi();
