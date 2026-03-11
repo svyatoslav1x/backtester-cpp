@@ -43,8 +43,7 @@ private:
 
     QString loadApiKeyFromEnvFile() const;
 
-    // save data for backtest
-    bool saveAppState(const QString &dataset, int strategyId);
+    void stopCurrentSimulation();
 
     QString currentSelectedDataset;
     QDateTime last_news_refresh;

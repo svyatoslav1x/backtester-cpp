@@ -94,7 +94,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     // backtest buttons
     connect(backtest_screen, &BacktestWindow::toSelectStrategyScreen, this,
-            [this] { stacked_widget->setCurrentWidget(select_strategy_screen); });
+            [this] {
+                stopCurrentSimulation();
+                backtest_screen->resetUI();
+                stacked_widget->setCurrentWidget(select_strategy_screen);
+            });
 
     connect(backtest_screen, &BacktestWindow::toDoneScreen, this, [this] {
         // todo: use done_screen.setResults to set results omg
@@ -264,9 +268,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
 
         // clean up any previous simulation engine to prevent memory leaks and dangling connections
-        if (simulation_engine) {
-            simulation_engine->deleteLater(); // use Qt's safe deletion
-        }
+        stopCurrentSimulation();
 
         // create a FRESH engine for this specific run
         simulation_engine = new SimulationEngine(this);
@@ -321,7 +323,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             connect(simulation_engine, &SimulationEngine::simulationFinished, this,
                     [this](const QString &stats) {
                         done_screen->setResults(stats);
-                        stacked_widget->setCurrentWidget(done_screen);
+                        backtest_screen->set_simulation_finished(stats);
                     });
 
             stacked_widget->setCurrentWidget(backtest_screen);
@@ -340,7 +342,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             [this] { stacked_widget->setCurrentWidget(backtest_screen); });
 
     connect(done_screen, &DoneScreen::StartScreenSwitch, this,
-            [this] { stacked_widget->setCurrentWidget(start_screen); });
+            [this] {
+                stopCurrentSimulation();
+                backtest_screen->resetUI();
+                stacked_widget->setCurrentWidget(start_screen);
+            });
 }
 
 MainWindow::~MainWindow() = default;
@@ -593,4 +599,17 @@ CreateStrategyScreen *MainWindow::createStrategyScreen() const {
 
 QStackedWidget *MainWindow::stackedWidget() const {
     return stacked_widget;
+}
+
+void MainWindow::stopCurrentSimulation() {
+    if (!simulation_engine) {
+        return;
+    }
+
+    disconnect(backtest_screen, &BacktestWindow::pauseToggled,
+               simulation_engine, &SimulationEngine::setPaused);
+
+    simulation_engine->stop();
+    simulation_engine->deleteLater();
+    simulation_engine = nullptr;
 }
