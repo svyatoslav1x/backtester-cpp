@@ -34,7 +34,7 @@ TEST_F(CreateStrategyScreenTest, ResetFormRestoresDefaults) {
     ASSERT_NE(screen->typeCombo(), nullptr);
     ASSERT_NE(screen->shortWindowSpin(), nullptr);
     ASSERT_NE(screen->longWindowSpin(), nullptr);
-    ASSERT_NE(screen->longWindowSpin(), nullptr);
+    ASSERT_NE(screen->stopLossSpin(), nullptr);
 
     screen->nameEdit()->setText("Changed");
     screen->typeCombo()->setCurrentText("StopLossStrategy");

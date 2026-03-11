@@ -45,7 +45,6 @@ private:
 
     void stopCurrentSimulation();
 
-    QString currentSelectedDataset;
     QDateTime last_news_refresh;
 
     // screens

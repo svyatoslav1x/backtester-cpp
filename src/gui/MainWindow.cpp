@@ -17,11 +17,9 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QPalette>
-#include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QUrl>
 #include <QUrlQuery>
-#include <QVector>
 
 #include "../../include/backtester.h"
 #include "../../include/data.h"
@@ -323,7 +321,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             connect(simulation_engine, &SimulationEngine::simulationFinished, this,
                     [this](const QString &stats) {
                         done_screen->setResults(stats);
-                        backtest_screen->set_simulation_finished(stats);
+                        backtest_screen->set_simulation_finished();
                     });
 
             stacked_widget->setCurrentWidget(backtest_screen);

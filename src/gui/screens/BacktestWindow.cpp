@@ -97,4 +97,6 @@ void BacktestWindow::resetUI() {
 	}
 }
 
-void BacktestWindow::set_simulation_finished(const QString& stats) { show_results_button->setEnabled(true); }
+void BacktestWindow::set_simulation_finished() {
+	show_results_button->setEnabled(true);
+}

@@ -5,7 +5,6 @@
 #include <QPointer>
 #include <QPushButton>
 #include <QSplitter>
-#include <QStackedWidget>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -23,7 +22,7 @@ public:
 
 	void add_signal_marker(double x, double y, bool is_buy);
 	void resetUI();
-	void set_simulation_finished(const QString& stats);
+	void set_simulation_finished();
 signals:
 	void pauseToggled(bool paused);
 	void toDoneScreen();
@@ -32,9 +31,7 @@ signals:
 private slots:
 	void on_pause_clicked();
 private:
-	QPointer<QStackedWidget> stacked_widget;
 	QPointer<QWidget> charts_view;
-	QPointer<QWidget> done_screen;
 
 	QPointer<ChartWidget> equity_chart;
 	QPointer<ChartWidget> price_chart;
@@ -42,15 +39,11 @@ private:
 	QPointer<QPushButton> pause_button;
 	QPointer<QPushButton> back_button;
 	QPointer<QPushButton> show_results_button;
-	QPointer<QPushButton> back_to_charts_button;
 
 	QPointer<QVBoxLayout> main_layout;
 	QPointer<QVBoxLayout> charts_layout;
 	QPointer<QHBoxLayout> bottom_buttons_layout;
 	QPointer<QSplitter> splitter;
-
-	double current_price;
-	double current_equity;
 
 	bool is_paused = false;
 };
