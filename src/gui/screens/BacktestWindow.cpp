@@ -33,20 +33,23 @@ BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 	pause_button->setStyleSheet("font-weight: bold; background-color: #333; color: white;");
 	connect(pause_button, &QPushButton::clicked, this, &BacktestWindow::on_pause_clicked);
 
+	progress_label = new QLabel("0%");
+	progress_label->setStyleSheet("font-size: 14pt; font-weight: bold; color: #475569;");
+
 	show_results_button = new QPushButton("Show Results");
+	show_results_button->setEnabled(false);
 	show_results_button->setMinimumSize(100, 40);
 	setButtonStyle(show_results_button, colors[0], colors[1], 11, true);
 	connect(show_results_button, &QPushButton::clicked, this, [this] { emit toDoneScreen(); });
 
 	bottom_buttons_layout->addWidget(back_button);
-	bottom_buttons_layout->addStretch();
 	bottom_buttons_layout->addWidget(pause_button);
+	bottom_buttons_layout->addWidget(progress_label);
 	bottom_buttons_layout->addStretch();
 	bottom_buttons_layout->addWidget(show_results_button);
 
 	charts_layout->addWidget(splitter);
 	charts_layout->addLayout(bottom_buttons_layout);
-
 	main_layout->addWidget(charts_view);
 }
 
@@ -88,6 +91,10 @@ void BacktestWindow::resetUI() {
 	// disable the results button until the new simulation is finished
 	show_results_button->setEnabled(false);
 
+	if (progress_label) {
+		progress_label->setText("0%");
+	}
+
 	// tell child charts to clear themselves
 	if (equity_chart) {
 		equity_chart->clearChart();
@@ -99,4 +106,10 @@ void BacktestWindow::resetUI() {
 
 void BacktestWindow::set_simulation_finished() {
 	show_results_button->setEnabled(true);
+}
+
+void BacktestWindow::update_progress(int percentage) {
+	if (progress_label) {
+		progress_label->setText(QString("Simulation is done by %1%").arg(percentage));
+	}
 }

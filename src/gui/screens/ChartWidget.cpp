@@ -100,6 +100,7 @@ ChartWidget::ChartWidget(const QString& title, bool price_chart, QWidget* parent
 	chart_view->setRenderHint(QPainter::Antialiasing);
 
 	connect(chart_view, &InteractiveChartView::pointHovered, this, &ChartWidget::on_point_hovered);
+	connect(chart_view, &InteractiveChartView::mouseLeft, this, &ChartWidget::on_mouse_left);
 
 	tooltip_label = new QLabel(this);
 	tooltip_label->setStyleSheet(
@@ -264,6 +265,10 @@ void ChartWidget::on_point_hovered(const QPointF& point) {
 	}
 }
 
+void ChartWidget::on_mouse_left() {
+	tooltip_label->hide();
+}
+
 void ChartWidget::add_signal_marker(double x, double y, bool is_buy) {
 	if (is_price_chart) {
 		if (is_buy) {
@@ -296,4 +301,9 @@ void ChartWidget::clearChart() {
 
 	axis_x->setRange(0, 100);
 	axis_y->setRange(0, 100);
+}
+
+void InteractiveChartView::leaveEvent(QEvent* event) {
+	emit mouseLeft();
+	QChartView::leaveEvent(event);
 }
