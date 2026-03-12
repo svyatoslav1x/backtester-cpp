@@ -13,6 +13,10 @@ public:
 	void setup(std::unique_ptr<Backtester> bt, const std::string& symbol);
 	void startSimulation();
     void stop();
+
+	// for tests
+	bool isFinished() const { return finished; }
+	bool isTimerActive() const { return timer.isActive(); }
 signals:
 	// new signal to draw the Green/Red triangles for Buy/Sell
 	void signalUpdated(double x, double y, bool is_buy);
@@ -24,6 +28,8 @@ signals:
 
 	// passes the final formatted results to the DoneScreen
 	void simulationFinished(const QString& stats);
+
+	void progressUpdated(int percentage);
 public slots:
 	void setPaused(bool isPaused);
 private slots:
@@ -36,6 +42,7 @@ private:
 
 	int last_position = 0;
 	int time_step;
+	int total_steps = 0;
     bool finished = false;
 };
 

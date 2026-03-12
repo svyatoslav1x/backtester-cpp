@@ -23,6 +23,16 @@ public:
 	void add_signal_marker(double x, double y, bool is_buy);
 	void resetUI();
 	void set_simulation_finished();
+
+	void update_progress(int percentage);
+
+	// for tests
+	QPointer<QPushButton> pauseButton() const { return pause_button; }
+	QPointer<QPushButton> backButton() const { return back_button; }
+	QPointer<QPushButton> showResultsButton() const { return show_results_button; }
+	QPointer<QLabel> progressLabel() const { return progress_label; }
+	void triggerPauseClicked() { on_pause_clicked(); }
+
 signals:
 	void pauseToggled(bool paused);
 	void toDoneScreen();
@@ -44,6 +54,7 @@ private:
 	QPointer<QVBoxLayout> charts_layout;
 	QPointer<QHBoxLayout> bottom_buttons_layout;
 	QPointer<QSplitter> splitter;
+	QPointer<QLabel> progress_label;
 
 	bool is_paused = false;
 };
