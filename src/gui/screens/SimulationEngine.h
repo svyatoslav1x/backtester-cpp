@@ -24,6 +24,8 @@ signals:
 
 	// passes the final formatted results to the DoneScreen
 	void simulationFinished(const QString& stats);
+
+	void progressUpdated(int percentage);
 public slots:
 	void setPaused(bool isPaused);
 private slots:
@@ -36,6 +38,7 @@ private:
 
 	int last_position = 0;
 	int time_step;
+	int total_steps = 0;
     bool finished = false;
 };
 
