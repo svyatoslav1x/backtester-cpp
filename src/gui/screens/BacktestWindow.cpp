@@ -34,9 +34,10 @@ BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 	connect(pause_button, &QPushButton::clicked, this, &BacktestWindow::on_pause_clicked);
 
 	progress_label = new QLabel("0%");
-	progress_label->setStyleSheet("font-size: 11pt; font-weight: bold; color: #475569; margin-left: 10px;");
+	progress_label->setStyleSheet("font-size: 14pt; font-weight: bold; color: #475569;");
 
 	show_results_button = new QPushButton("Show Results");
+	show_results_button->setEnabled(false);
 	show_results_button->setMinimumSize(100, 40);
 	setButtonStyle(show_results_button, colors[0], colors[1], 11, true);
 	connect(show_results_button, &QPushButton::clicked, this, [this] { emit toDoneScreen(); });
@@ -109,6 +110,6 @@ void BacktestWindow::set_simulation_finished() {
 
 void BacktestWindow::update_progress(int percentage) {
 	if (progress_label) {
-		progress_label->setText(QString("%1%").arg(percentage));
+		progress_label->setText(QString("Simulation is done by %1%").arg(percentage));
 	}
 }

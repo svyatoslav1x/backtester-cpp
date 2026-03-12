@@ -26,6 +26,13 @@ public:
 
 	void update_progress(int percentage);
 
+	// for tests
+	QPointer<QPushButton> pauseButton() const { return pause_button; }
+	QPointer<QPushButton> backButton() const { return back_button; }
+	QPointer<QPushButton> showResultsButton() const { return show_results_button; }
+	QPointer<QLabel> progressLabel() const { return progress_label; }
+	void triggerPauseClicked() { on_pause_clicked(); }
+
 signals:
 	void pauseToggled(bool paused);
 	void toDoneScreen();

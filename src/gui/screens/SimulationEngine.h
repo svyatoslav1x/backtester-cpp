@@ -13,6 +13,10 @@ public:
 	void setup(std::unique_ptr<Backtester> bt, const std::string& symbol);
 	void startSimulation();
     void stop();
+
+	// for tests
+	bool isFinished() const { return finished; }
+	bool isTimerActive() const { return timer.isActive(); }
 signals:
 	// new signal to draw the Green/Red triangles for Buy/Sell
 	void signalUpdated(double x, double y, bool is_buy);

@@ -66,6 +66,14 @@ public:
 	void auto_scale();
 	void add_signal_marker(double x, double y, bool is_buy);
 	void clearChart();
+
+	// for tests
+	bool getIsPriceChart() const { return is_price_chart; }
+	QPointer<QLineSeries> getMainSeries() const { return main_series; }
+	QPointer<QLineSeries> getShortMaSeries() const { return short_ma_series; }
+	QPointer<QLineSeries> getLongMaSeries() const { return long_ma_series; }
+	QPointer<QScatterSeries> getBuyMarkers() const { return buy_markers; }
+	QPointer<QLabel> getMetricsLabel() const { return metrics_label; }
 };
 
 #endif
