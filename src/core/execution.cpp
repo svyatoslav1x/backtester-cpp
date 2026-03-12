@@ -19,9 +19,9 @@ void SimulatedExecutionHandler::execute_order(const Event& event) {
 	auto fill_time = std::chrono::system_clock::now();
 
 	auto fill_event = std::make_unique<FillEvent>(fill_time, order_event.get_symbol(), "SIM_EXCHANGE",
-												  order_event.get_quantity(), order_event.get_direction(),
-												  0.0, // fill_cost (to be estimated by Portfolio)
-												  -1.0 // commission
+		order_event.get_quantity(), order_event.get_direction(),
+		0.0, // fill_cost (to be estimated by Portfolio)
+		-1.0 // commission
 	);
 
 	events.push(std::move(fill_event));

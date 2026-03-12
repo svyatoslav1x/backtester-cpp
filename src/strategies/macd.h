@@ -30,10 +30,10 @@ private:
 	void update_ema(const std::string& symbol, double price);
 public:
 	MovingAveragesLongStrategy(DataHandler& data,
-							   std::queue<std::unique_ptr<Event>>& events,
-							   Portfolio& portfolio,
-							   int short_period,
-							   int long_period);
+		std::queue<std::unique_ptr<Event>>& events,
+		Portfolio& portfolio,
+		int short_period,
+		 int long_period);
 
 	void calculate_signals(const Event& event) override;
 	void plot() override;

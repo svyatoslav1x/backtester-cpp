@@ -5,10 +5,10 @@
 const double PI = 3.14159265358979323846;
 
 MovingAveragesLongStrategy::MovingAveragesLongStrategy(DataHandler& data,
-													   std::queue<std::unique_ptr<Event>>& events,
-													   Portfolio& portfolio,
-													   int short_period,
-													   int long_period) :
+	std::queue<std::unique_ptr<Event>>& events,
+	Portfolio& portfolio,
+	int short_period,
+	int long_period) :
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
