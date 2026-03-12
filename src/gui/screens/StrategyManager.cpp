@@ -25,7 +25,7 @@ void StrategyManager::setup_ui() {
     main_layout = new QVBoxLayout(this);
     main_layout->setContentsMargins(40, 40, 40, 40);
 
-    title = new QLabel("<h1 style='color: #111827;'>📚 Strategy Management</h1>");
+    title = new QLabel("<h1 style='color: #111827;'>Strategy Management</h1>");
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet("background: transparent; font-size: 24pt; font-weight: bold;");
     main_layout->addWidget(title);

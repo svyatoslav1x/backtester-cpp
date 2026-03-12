@@ -17,11 +17,12 @@ public:
 	explicit InteractiveChartView(QChart* chart, QWidget* parent = nullptr);
 protected:
 	void wheelEvent(QWheelEvent* event) override;
-
 	void mouseMoveEvent(QMouseEvent* event) override;
+	void leaveEvent(QEvent* event) override;
 
 signals:
 	void pointHovered(const QPointF& point);
+	void mouseLeft();
 };
 
 class ChartWidget : public QWidget {
@@ -54,6 +55,7 @@ private:
 
 private slots:
 	void on_point_hovered(const QPointF& point);
+	void on_mouse_left();
 public:
 	explicit ChartWidget(const QString& title, bool price_chart = false, QWidget* parent = nullptr);
 
