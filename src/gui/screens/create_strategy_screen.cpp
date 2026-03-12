@@ -244,30 +244,31 @@ void CreateStrategyScreen::updateParameterVisibility() {
     }
 }
 
-QLineEdit* CreateStrategyScreen::nameEdit() const {
+QLineEdit *CreateStrategyScreen::nameEdit() const {
     return strategy_name_edit;
 }
 
-QComboBox* CreateStrategyScreen::typeCombo() const {
+QComboBox *CreateStrategyScreen::typeCombo() const {
     return strategy_type_combo;
 }
 
-QSpinBox* CreateStrategyScreen::shortWindowSpin() const {
+QSpinBox *CreateStrategyScreen::shortWindowSpin() const {
     return short_window_spin;
 }
 
-QSpinBox* CreateStrategyScreen::longWindowSpin() const {
+QSpinBox *CreateStrategyScreen::longWindowSpin() const {
     return long_window_spin;
 }
 
-QDoubleSpinBox* CreateStrategyScreen::stopLossSpin() const {
+//ilove****
+QDoubleSpinBox *CreateStrategyScreen::stopLossSpin() const {
     return stop_loss_spin;
 }
 
-QPushButton* CreateStrategyScreen::saveButton() const {
+QPushButton *CreateStrategyScreen::saveButton() const {
     return save_button;
 }
 
-QPushButton* CreateStrategyScreen::backButton() const {
+QPushButton *CreateStrategyScreen::backButton() const {
     return back_button;
 }
