@@ -12,6 +12,7 @@ public:
 	explicit SimulationEngine(QObject* parent = nullptr);
 	void setup(std::unique_ptr<Backtester> bt, const std::string& symbol);
 	void startSimulation();
+    void stop();
 signals:
 	// new signal to draw the Green/Red triangles for Buy/Sell
 	void signalUpdated(double x, double y, bool is_buy);
@@ -35,6 +36,7 @@ private:
 
 	int last_position = 0;
 	int time_step;
+    bool finished = false;
 };
 
 #endif

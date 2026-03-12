@@ -20,6 +20,18 @@ public:
 
     QString selectedDataset() const;
 
+    QComboBox *datasetCombo() const;
+
+    QTextEdit *newsTextEdit() const;
+
+    QPushButton *startButton() const;
+
+    QPushButton *createStrategyButton() const;
+
+    QPushButton *manageStrategiesButton() const;
+
+    QString newsText() const;
+
 signals:
     void manageStrategiesSwitch();
 

@@ -9,24 +9,32 @@
 #include <QWidget>
 
 class DoneScreen : public QWidget {
-	Q_OBJECT;
+    Q_OBJECT;
+
 public:
-	explicit DoneScreen(QWidget* parent = nullptr);
+    explicit DoneScreen(QWidget *parent = nullptr);
 
-	void setResults(const QString& final_stats);
+    void setResults(const QString &final_stats);
+
+    QString resultsText() const;
+
+    QPushButton *homeButton() const;
+
+    QPushButton *chartsButton() const;
+
 private:
-	void buildUi();
+    void buildUi();
 
-	QPointer<QLabel> text;
-	QPointer<QTextEdit> final_result;
-	QPointer<QVBoxLayout> main_layout;
-	QPointer<QHBoxLayout> buttons;
-	QPointer<QPushButton> return_starting_screen;
-	QPointer<QPushButton> return_charts_screen;
-	QPointer<QWidget> buttons_widget;
+    QPointer<QLabel> text;
+    QPointer<QTextEdit> final_result;
+    QPointer<QVBoxLayout> main_layout;
+    QPointer<QHBoxLayout> buttons;
+    QPointer<QPushButton> return_starting_screen;
+    QPointer<QPushButton> return_charts_screen;
+    QPointer<QWidget> buttons_widget;
 signals:
-	void StartScreenSwitch();
+    void StartScreenSwitch();
 
-	void BacktestScreenSwitch();
+    void BacktestScreenSwitch();
 };
 #endif // GUI_MAIN_WINDOW_DONE_SCREEN_H

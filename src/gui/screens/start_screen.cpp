@@ -92,3 +92,28 @@ QString StartScreen::selectedDataset() const {
     }
     return "";
 }
+
+QComboBox *StartScreen::datasetCombo() const {
+    return dataset_combo;
+}
+
+QTextEdit *StartScreen::newsTextEdit() const {
+    return news_display;
+}
+
+
+QPushButton *StartScreen::startButton() const {
+    return start_button;
+}
+
+QPushButton *StartScreen::createStrategyButton() const {
+    return create_strategy_button;
+}
+
+QPushButton *StartScreen::manageStrategiesButton() const {
+    return manage_strategies_button;
+}
+
+QString StartScreen::newsText() const {
+    return news_display ? news_display->toPlainText() : QString{};
+}

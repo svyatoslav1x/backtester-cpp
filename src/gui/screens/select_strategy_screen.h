@@ -19,6 +19,12 @@ public:
 
     QString selectedStrategyText() const;
 
+    QComboBox *strategyCombo() const;
+
+    QPushButton *backButton() const;
+
+    QPushButton *startBacktestButton() const;
+
 private:
     void buildUi();
 
@@ -32,6 +38,7 @@ private:
     QPointer<QPushButton> next_button;
 signals:
     void StartScreenSwitch();
+
     void StartBacktestSwitch();
 };
 

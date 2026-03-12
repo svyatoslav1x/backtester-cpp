@@ -6,7 +6,7 @@ SimulationEngine::SimulationEngine(QObject* parent) : QObject(parent), time_step
 }
 
 void SimulationEngine::startSimulation() {
-	if (!backtester)
+	if (!backtester || finished)
 		return;
 
 	// pre-fill the first 50 data points instantly so the chart isn't empty on load
@@ -23,11 +23,22 @@ void SimulationEngine::setup(std::unique_ptr<Backtester> bt, const std::string& 
 	active_symbol = symbol;
 	time_step = 0;
 	last_position = 0;
+	finished = false;
+}
+
+void SimulationEngine::stop() {
+	timer.stop();
+	finished = true;
 }
 
 void SimulationEngine::simulateStep() {
-	if (!backtester || !backtester->step()) {
+	if (!backtester || finished) {
+		return;
+	}
+
+	if (!backtester->step()) {
 		timer.stop();
+		finished = true;
 
 		QString final_stats = "No data processed.";
 		if (backtester) {
@@ -95,6 +106,10 @@ void SimulationEngine::simulateStep() {
 }
 
 void SimulationEngine::setPaused(bool isPaused) {
+	if (!backtester || finished) {
+		return;
+	}
+
 	if (isPaused) {
 		timer.stop();
 	} else {
