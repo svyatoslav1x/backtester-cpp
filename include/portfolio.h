@@ -15,7 +15,10 @@ public:
 	virtual ~Portfolio() = default;
 
 	virtual void update_timeindex(const Event& event) = 0;
+
+	// handles new trading signals from a strategy
 	virtual void update_signal(const Event& event) = 0;
+	// handles fill events received from an execution handler
 	virtual void update_fill(const Event& event) = 0;
 
 	// Getters for strategies
@@ -38,16 +41,24 @@ struct HoldingRecord {
 
 class NaivePortfolio : public Portfolio {
 private:
+	// A position is simply the quantity of the asset.
+	// Negative positions mean the asset has been shorted.
+	//
+	// Holdings decribe the current maket value of the positions held.
+	// Where "the current market value" is the closing price of the
+	// current market bar.
+
 	DataHandler& data;
 	std::queue<std::unique_ptr<Event>>& events;
 	std::vector<std::string> symbol_list;
 
 	std::string strategy_name;
-	double initial_capital;
+	double initial_capital{100000}; // 100,000 USD
 
-	// current state
+	// contains current positions for the last market bar update
 	std::unordered_map<std::string, int> current_positions;
 
+	// stores the most up to date holdings for each symbol
 	struct {
 		double cash;
 		double commission;
@@ -55,8 +66,11 @@ private:
 		std::unordered_map<std::string, double> symbols;
 	} current_holdings;
 
-	// historical state
+	// stores a list of all previous positions recorded at the timestamp
+	// of a market data event
 	std::vector<PositionRecord> all_positions;
+	// stores a list of all previous holdings recorded at the timestamp
+	// of a market data event
 	std::vector<HoldingRecord> all_holdings;
 
 	// helpers

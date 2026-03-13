@@ -28,12 +28,39 @@ void NaivePortfolio::construct_current_holdings() {
 	current_holdings.total = initial_capital;
 }
 
-int NaivePortfolio::get_position(const std::string& symbol) const {
-	auto it = current_positions.find(symbol);
-	if (it != current_positions.end()) {
-		return it->second;
+void NaivePortfolio::update_positions_from_fill(const FillEvent& fill) {
+	int fill_dir = 0;
+	if (fill.get_direction() == "BUY") {
+		fill_dir = 1;
+	} else if (fill.get_direction() == "SELL") {
+		fill_dir = -1;
 	}
-	return 0;
+
+	current_positions[fill.get_symbol()] += fill_dir * fill.get_quantity();
+}
+
+void NaivePortfolio::update_holdings_from_fill(const FillEvent& fill) {
+	int fill_dir = 0;
+	if (fill.get_direction() == "BUY") {
+		fill_dir = 1;
+	} else if (fill.get_direction() == "SELL") {
+		fill_dir = -1;
+	}
+
+	// attempt to get the real-world current market price from data
+	// to calculate the estimated cost of the trade.
+	double fill_cost = fill.get_fill_cost();
+	auto bars = data.get_latest_bars(fill.get_symbol(), 1);
+	if (!bars.empty()) {
+		fill_cost = bars[0].close;
+	}
+
+	double cost = fill_cost * fill_dir * fill.get_quantity();
+
+	current_holdings.symbols[fill.get_symbol()] += cost;
+	current_holdings.commission += fill.get_commission();
+	current_holdings.cash -= (cost + fill.get_commission());
+	current_holdings.total -= (cost + fill.get_commission());
 }
 
 void NaivePortfolio::update_timeindex(const Event& event) {
@@ -83,39 +110,14 @@ void NaivePortfolio::update_timeindex(const Event& event) {
 	all_holdings.push_back(hr);
 }
 
-void NaivePortfolio::update_positions_from_fill(const FillEvent& fill) {
-	int fill_dir = 0;
-	if (fill.get_direction() == "BUY") {
-		fill_dir = 1;
-	} else if (fill.get_direction() == "SELL") {
-		fill_dir = -1;
+void NaivePortfolio::update_signal(const Event& event) {
+	if (event.type() == EventType::SIGNAL) {
+		const auto& signal_event = static_cast<const SignalEvent&>(event);
+		auto order = generate_naive_order(signal_event);
+		if (order != nullptr) {
+			events.push(std::move(order));
+		}
 	}
-
-	current_positions[fill.get_symbol()] += fill_dir * fill.get_quantity();
-}
-
-void NaivePortfolio::update_holdings_from_fill(const FillEvent& fill) {
-	int fill_dir = 0;
-	if (fill.get_direction() == "BUY") {
-		fill_dir = 1;
-	} else if (fill.get_direction() == "SELL") {
-		fill_dir = -1;
-	}
-
-	// attempt to get the real-world current market price from data
-	// to calculate the estimated cost of the trade.
-	double fill_cost = fill.get_fill_cost();
-	auto bars = data.get_latest_bars(fill.get_symbol(), 1);
-	if (!bars.empty()) {
-		fill_cost = bars[0].close;
-	}
-
-	double cost = fill_cost * fill_dir * fill.get_quantity();
-
-	current_holdings.symbols[fill.get_symbol()] += cost;
-	current_holdings.commission += fill.get_commission();
-	current_holdings.cash -= (cost + fill.get_commission());
-	current_holdings.total -= (cost + fill.get_commission());
 }
 
 void NaivePortfolio::update_fill(const Event& event) {
@@ -124,6 +126,14 @@ void NaivePortfolio::update_fill(const Event& event) {
 		update_positions_from_fill(fill_event);
 		update_holdings_from_fill(fill_event);
 	}
+}
+
+int NaivePortfolio::get_position(const std::string& symbol) const {
+	auto it = current_positions.find(symbol);
+	if (it != current_positions.end()) {
+		return it->second;
+	}
+	return 0;
 }
 
 std::unique_ptr<OrderEvent> NaivePortfolio::generate_naive_order(const SignalEvent& signal) {
@@ -147,16 +157,6 @@ std::unique_ptr<OrderEvent> NaivePortfolio::generate_naive_order(const SignalEve
 	}
 
 	return nullptr;
-}
-
-void NaivePortfolio::update_signal(const Event& event) {
-	if (event.type() == EventType::SIGNAL) {
-		const auto& signal_event = static_cast<const SignalEvent&>(event);
-		auto order = generate_naive_order(signal_event);
-		if (order != nullptr) {
-			events.push(std::move(order));
-		}
-	}
 }
 
 std::vector<std::pair<std::string, std::string>> NaivePortfolio::summary_stats() {
