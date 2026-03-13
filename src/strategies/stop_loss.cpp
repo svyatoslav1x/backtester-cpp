@@ -2,9 +2,9 @@
 #include <cmath>
 
 StopLossStrategy::StopLossStrategy(DataHandler& data_,
-								   std::queue<std::unique_ptr<Event>>& events_,
-								   Portfolio& portfolio_,
-								   double stop_loss_percentage_) :
+	std::queue<std::unique_ptr<Event>>& events_,
+	Portfolio& portfolio_,
+	double stop_loss_percentage_) :
 	data(data_), events(events_), portfolio(portfolio_), stop_loss_percentage(stop_loss_percentage_) {
 	symbol_list = data.get_symbols();
 

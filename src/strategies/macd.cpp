@@ -5,32 +5,32 @@
 const double PI = 3.14159265358979323846;
 
 MovingAveragesLongStrategy::MovingAveragesLongStrategy(DataHandler& data,
-													   std::queue<std::unique_ptr<Event>>& events,
-													   Portfolio& portfolio,
-													   int short_period,
-													   int long_period) :
+	std::queue<std::unique_ptr<Event>>& events,
+	Portfolio& portfolio,
+	int short_period,
+	int long_period) :
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought[symbol] = false;
-		bars_processed[symbol] = 0;
-		short_ema[symbol] = 0.0;
-		long_ema[symbol] = 0.0;
+		bought.at(symbol) = false;
+		bars_processed.at(symbol) = 0;
+		short_ema.at(symbol) = 0.0;
+		long_ema.at(symbol) = 0.0;
 	}
 }
 
 void MovingAveragesLongStrategy::update_ema(const std::string& symbol, double price) {
-	bars_processed[symbol]++;
+	bars_processed.at(symbol)++;
 
-	if (bars_processed[symbol] == 1) {
-		short_ema[symbol] = price;
-		long_ema[symbol] = price;
+	if (bars_processed.at(symbol) == 1) { // 
+		short_ema.at(symbol) = price;
+		long_ema.at(symbol) = price;
 	} else {
 		double alpha_short = 2.0 / (short_period + 1.0);
 		double alpha_long = 2.0 / (long_period + 1.0);
 
-		short_ema[symbol] = (price * alpha_short) + (short_ema[symbol] * (1.0 - alpha_short));
-		long_ema[symbol] = (price * alpha_long) + (long_ema[symbol] * (1.0 - alpha_long));
+		short_ema.at(symbol) = (price * alpha_short) + (short_ema.at(symbol) * (1.0 - alpha_short));
+		long_ema.at(symbol) = (price * alpha_long) + (long_ema.at(symbol) * (1.0 - alpha_long));
 	}
 }
 
@@ -48,20 +48,20 @@ void MovingAveragesLongStrategy::calculate_signals(const Event& event) {
 
 		update_ema(symbol, price);
 
-		if (bars_processed[symbol] < long_period)
+		if (bars_processed.at(symbol) < long_period)
 			continue;
 
-		double s_ema = short_ema[symbol];
-		double l_ema = long_ema[symbol];
+		double s_ema = short_ema.at(symbol);
+		double l_ema = long_ema.at(symbol);
 
-		if (!bought[symbol] && s_ema > l_ema) {
+		if (!bought.at(symbol) && s_ema > l_ema) {
 			int quantity = static_cast<int>(std::floor(portfolio.get_cash() / price));
 			events.push(std::make_unique<SignalEvent>(symbol, date, "LONG", quantity));
-			bought[symbol] = true;
-		} else if (bought[symbol] && s_ema < l_ema) {
+			bought.at(symbol) = true;
+		} else if (bought.at(symbol) && s_ema < l_ema) {
 			int quantity = portfolio.get_position(symbol);
 			events.push(std::make_unique<SignalEvent>(symbol, date, "EXIT", quantity));
-			bought[symbol] = false;
+			bought.at(symbol) = false;
 		}
 	}
 }
@@ -86,32 +86,32 @@ std::map<std::string, double> MovingAveragesLongStrategy::get_indicators() const
 }
 
 MovingAveragesLongShortStrategy::MovingAveragesLongShortStrategy(DataHandler& data,
-																 std::queue<std::unique_ptr<Event>>& events,
-																 Portfolio& portfolio,
-																 int short_period,
-																 int long_period) :
+	std::queue<std::unique_ptr<Event>>& events,
+	Portfolio& portfolio,
+	int short_period,
+	int long_period) :
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought[symbol] = false;
-		bars_processed[symbol] = 0;
-		short_ema[symbol] = 0.0;
-		long_ema[symbol] = 0.0;
+		bought.at(symbol) = false;
+		bars_processed.at(symbol) = 0;
+		short_ema.at(symbol) = 0.0;
+		long_ema.at(symbol) = 0.0;
 	}
 }
 
 void MovingAveragesLongShortStrategy::update_ema(const std::string& symbol, double price) {
-	bars_processed[symbol]++;
+	bars_processed.at(symbol)++;
 
-	if (bars_processed[symbol] == 1) {
-		short_ema[symbol] = price;
-		long_ema[symbol] = price;
+	if (bars_processed.at(symbol) == 1) {
+		short_ema.at(symbol) = price;
+		long_ema.at(symbol) = price;
 	} else {
 		double alpha_short = 2.0 / (short_period + 1.0);
 		double alpha_long = 2.0 / (long_period + 1.0);
 
-		short_ema[symbol] = (price * alpha_short) + (short_ema[symbol] * (1.0 - alpha_short));
-		long_ema[symbol] = (price * alpha_long) + (long_ema[symbol] * (1.0 - alpha_long));
+		short_ema.at(symbol) = (price * alpha_short) + (short_ema.at(symbol) * (1.0 - alpha_short));
+		long_ema.at(symbol) = (price * alpha_long) + (long_ema.at(symbol) * (1.0 - alpha_long));
 	}
 }
 
@@ -129,25 +129,25 @@ void MovingAveragesLongShortStrategy::calculate_signals(const Event& event) {
 
 		update_ema(symbol, price);
 
-		if (bars_processed[symbol] < long_period)
+		if (bars_processed.at(symbol) < long_period)
 			continue;
 
-		double s_ema = short_ema[symbol];
-		double l_ema = long_ema[symbol];
+		double s_ema = short_ema.at(symbol);
+		double l_ema = long_ema.at(symbol);
 		int current_positions = portfolio.get_position(symbol);
 
-		if (!bought[symbol] && s_ema > l_ema) {
+		if (!bought.at(symbol) && s_ema > l_ema) {
 			int quantity = static_cast<int>(std::floor(portfolio.get_cash() / price)) + current_positions;
 
 			events.push(std::make_unique<SignalEvent>(symbol, date, "EXIT", std::abs(current_positions)));
 			events.push(std::make_unique<SignalEvent>(symbol, date, "LONG", quantity));
-			bought[symbol] = true;
-		} else if (bought[symbol] && s_ema < l_ema) {
+			bought.at(symbol) = true;
+		} else if (bought.at(symbol) && s_ema < l_ema) {
 			int quantity = current_positions;
 
 			events.push(std::make_unique<SignalEvent>(symbol, date, "EXIT", quantity));
 			events.push(std::make_unique<SignalEvent>(symbol, date, "SHORT", quantity));
-			bought[symbol] = false;
+			bought.at(symbol) = false;
 		}
 	}
 }
@@ -169,10 +169,10 @@ std::map<std::string, double> MovingAveragesLongShortStrategy::get_indicators() 
 }
 
 MovingAveragesMomentumStrategy::MovingAveragesMomentumStrategy(DataHandler& data,
-															   std::queue<std::unique_ptr<Event>>& events,
-															   Portfolio& portfolio,
-															   int short_period,
-															   int long_period) :
+	std::queue<std::unique_ptr<Event>>& events,
+	Portfolio& portfolio,
+	int short_period,
+	int long_period) :
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
