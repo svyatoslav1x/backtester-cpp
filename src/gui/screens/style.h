@@ -90,53 +90,42 @@ inline void setEditStyle(QWidget *widget, const QColor &baseColor, const QColor 
                          const QColor &placeholderColor, int pointSize, bool bold) {
     setWidgetFont(widget, pointSize, bold);
 
-    const QColor borderColor = baseColor.darker(110);
-    const QString commonStyle = QString(
-        "background-color: %1;"
-        "color: %2;"
-        "border: 1px solid %3;"
-        "border-radius: 4px;"
-        "padding: 6px 8px;").arg(cssColor(baseColor), cssColor(textColor), cssColor(borderColor));
+    QPalette p = widget->palette();
+    p.setColor(QPalette::Base, baseColor);
+    p.setColor(QPalette::Text, textColor);
+    p.setColor(QPalette::PlaceholderText, placeholderColor);
+    p.setColor(QPalette::Button, baseColor);
+    p.setColor(QPalette::ButtonText, textColor);
 
-    widget->setStyleSheet(QString("QWidget { %1 }").arg(commonStyle));
+    widget->setPalette(p);
+    widget->setAutoFillBackground(true);
 
     if (auto *spin = qobject_cast<QSpinBox *>(widget)) {
-        spin->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
-        spin->setStyleSheet(QString(
-            "QSpinBox { %1 }"
-            "QSpinBox::up-button, QSpinBox::down-button {"
-            " background-color: %2;"
-            " width: 18px;"
-            " border-left: 1px solid %3;"
-            "}"
-            "QSpinBox::up-button:hover, QSpinBox::down-button:hover {"
-            " background-color: %4;"
-            "}").arg(commonStyle, cssColor(colors[13]), cssColor(borderColor), cssColor(colors[12])));
-        return;
+        spin->setFrame(true);
+        QPalette sp = spin->palette();
+        sp.setColor(QPalette::Base, colors[12]);
+        sp.setColor(QPalette::Button, colors[13]);
+        sp.setColor(QPalette::Text, textColor);
+        sp.setColor(QPalette::ButtonText, textColor);
+        spin->setPalette(sp);
+        spin->setAutoFillBackground(true);
     }
 }
 
-inline void setComboStyle(QComboBox *combo,
-                          const QColor &baseColor,
-                          const QColor &textColor,
-                          int pointSize,
+inline void setComboStyle(QComboBox *combo, const QColor &baseColor, const QColor &textColor, int pointSize,
                           bool bold) {
     setWidgetFont(combo, pointSize, bold);
 
-    combo->setStyleSheet(QString(
-        "QComboBox {"
-        " background-color: %1;"
-        " color: %2;"
-        " border: 1px solid %2;"
-        " padding: 4px 8px;"
-        " min-height: 28px;"
-        "}"
-        "QComboBox QAbstractItemView {"
-        " background-color: %1;"
-        " color: %2;"
-        " border: 1px solid %2;"
-        "}"
-    ).arg(baseColor.name(), textColor.name()));
+    QPalette p = combo->palette();
+    p.setColor(QPalette::Base, baseColor);
+    p.setColor(QPalette::Button, baseColor);
+    p.setColor(QPalette::Text, textColor);
+    p.setColor(QPalette::ButtonText, textColor);
+    p.setColor(QPalette::Highlight, colors[11]);
+    p.setColor(QPalette::HighlightedText, colors[1]);
+
+    combo->setPalette(p);
+    combo->setAutoFillBackground(true);
 }
 
 inline void setTextDisplayStyle(QTextEdit *textEdit, const QColor &baseColor, const QColor &textColor, int pointSize,
