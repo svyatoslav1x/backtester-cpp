@@ -12,10 +12,10 @@ MovingAveragesLongStrategy::MovingAveragesLongStrategy(DataHandler& data,
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought.at(symbol) = false;
-		bars_processed.at(symbol) = 0;
-		short_ema.at(symbol) = 0.0;
-		long_ema.at(symbol) = 0.0;
+		bought[symbol] = false;
+		bars_processed[symbol] = 0;
+		short_ema[symbol] = 0.0;
+		long_ema[symbol] = 0.0;
 	}
 }
 
@@ -93,10 +93,10 @@ MovingAveragesLongShortStrategy::MovingAveragesLongShortStrategy(DataHandler& da
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought.at(symbol) = false;
-		bars_processed.at(symbol) = 0;
-		short_ema.at(symbol) = 0.0;
-		long_ema.at(symbol) = 0.0;
+		bought[symbol] = false;
+		bars_processed[symbol] = 0;
+		short_ema[symbol] = 0.0;
+		long_ema[symbol] = 0.0;
 	}
 }
 

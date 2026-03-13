@@ -6,7 +6,6 @@
 #include <QFont>
 #include <QLabel>
 #include <QLineEdit>
-#include <qlistview.h>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTextEdit>
@@ -115,18 +114,10 @@ inline void setEditStyle(QWidget *widget, const QColor &baseColor, const QColor 
             "}").arg(commonStyle, cssColor(colors[13]), cssColor(borderColor), cssColor(colors[12])));
         return;
     }
-
-    if (auto *lineEdit = qobject_cast<QLineEdit *>(widget)) {
-        lineEdit->setPlaceholderText(lineEdit->placeholderText());
-        lineEdit->setStyleSheet(QString(
-            "QLineEdit { %1 }"
-            "QLineEdit[echoMode='2'] { letter-spacing: 1px; }").arg(commonStyle));
-        lineEdit->setProperty("placeholderTextColor", placeholderColor);
-    }
 }
 
 inline void setComboStyle(QComboBox *combo,
-                          const QColor &backgroundColor,
+                          const QColor &baseColor,
                           const QColor &textColor,
                           int pointSize,
                           bool bold) {
@@ -145,7 +136,7 @@ inline void setComboStyle(QComboBox *combo,
         " color: %2;"
         " border: 1px solid %2;"
         "}"
-    ).arg(backgroundColor.name(), textColor.name()));
+    ).arg(baseColor.name(), textColor.name()));
 }
 
 inline void setTextDisplayStyle(QTextEdit *textEdit, const QColor &baseColor, const QColor &textColor, int pointSize,
