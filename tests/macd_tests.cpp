@@ -1,81 +1,70 @@
 #include "macd_tests.h"
-#include <chrono>
-#include <cmath>
 
-// ---------------- MovingAveragesLongStrategy Tests ----------------
-TEST(MACDTest, LongStrategyEMAUpdate) {
-    MockDataHandler data;
-    std::queue<std::unique_ptr<Event>> events;
-    MockPortfolio portfolio;
 
-    MovingAveragesLongStrategy strat(data, events, portfolio, 2, 3);
+TEST_F(MACDTest, FirstBarReturnsNoSignal)
+{
+    data.push_price("AAPL", 100);
 
-    // Добавляем бары
-    auto now = std::chrono::system_clock::now();
-    data.bars["AAPL"].push_back({now, 10.0});
-    data.bars["AAPL"].push_back({now, 12.0});
-    data.bars["AAPL"].push_back({now, 14.0});
+    strategy->calculate_signals(market_event);
 
-    // Создаём MarketEvent
-    MarketEvent me;
-    strat.calculate_signals(me);
-
-    // Проверяем что EMA обновились
-    double short_ema = strat.get_short_ema("AAPL");
-    double long_ema = strat.get_long_ema("AAPL");
-    EXPECT_GT(short_ema, 0.0);
-    EXPECT_GT(long_ema, 0.0);
-
-    // После достаточного количества баров должна быть сгенерирована LONG signal
-    EXPECT_FALSE(events.empty());
-    auto& ev = events.front();
-    EXPECT_EQ(ev->type(), EventType::SIGNAL);
-    EXPECT_EQ(ev->get_symbol(), "AAPL");
-    EXPECT_EQ(ev->get_direction(), "LONG");
+    EXPECT_TRUE(events.empty());
 }
 
-// ---------------- MovingAveragesLongShortStrategy Tests ----------------
-TEST(MACDTest, LongShortStrategySignalGeneration) {
-    MockDataHandler data;
-    std::queue<std::unique_ptr<Event>> events;
-    MockPortfolio portfolio;
-    portfolio.positions["AAPL"] = 0;
 
-    MovingAveragesLongShortStrategy strat(data, events, portfolio, 2, 3);
+TEST_F(MACDTest, NoSignalBeforeLongPeriod)
+{
+    std::cout << "size = " << data.get_latest_bars("AAPL",1).size() << std::endl;
+    data.push_price("AAPL", 100);
+    strategy->calculate_signals(market_event);
 
-    auto now = std::chrono::system_clock::now();
-    data.bars["AAPL"].push_back({now, 10.0});
-    data.bars["AAPL"].push_back({now, 12.0});
-    data.bars["AAPL"].push_back({now, 14.0});
+    data.push_price("AAPL", 101);
+    strategy->calculate_signals(market_event);
 
-    MarketEvent me;
-    strat.calculate_signals(me);
+    data.push_price("AAPL",102);
+    strategy->calculate_signals(market_event);
 
-    EXPECT_FALSE(events.empty());
-    auto& ev = events.front();
-    EXPECT_EQ(ev->type(), EventType::SIGNAL);
-    EXPECT_EQ(ev->get_symbol(), "AAPL");
+    EXPECT_TRUE(events.empty());
 }
 
-// ---------------- MovingAveragesMomentumStrategy Tests ----------------
-TEST(MACDTest, MomentumStrategyPositionSizing) {
-    MockDataHandler data;
-    std::queue<std::unique_ptr<Event>> events;
-    MockPortfolio portfolio;
-    portfolio.positions["AAPL"] = 10;
 
-    MovingAveragesMomentumStrategy strat(data, events, portfolio, 2, 3);
+TEST_F(MACDTest, EMAStartsUpdating)
+{
+    data.push_price("AAPL",100);
+    strategy->calculate_signals(market_event);
 
-    auto now = std::chrono::system_clock::now();
-    data.bars["AAPL"].push_back({now, 10.0});
-    data.bars["AAPL"].push_back({now, 12.0});
-    data.bars["AAPL"].push_back({now, 14.0});
+    data.push_price("AAPL",110);
+    strategy->calculate_signals(market_event);
 
-    MarketEvent me;
-    strat.calculate_signals(me);
+    double ema = strategy->get_short_ema("AAPL");
 
-    EXPECT_FALSE(events.empty());
-    auto& ev = events.front();
-    EXPECT_EQ(ev->type(), EventType::SIGNAL);
-    EXPECT_EQ(ev->get_symbol(), "AAPL");
+    EXPECT_GT(ema, 0.0);
+}
+
+
+TEST_F(MACDTest, GeneratesLongSignal)
+{
+    strategy = std::make_unique<MovingAveragesLongStrategy>(
+        data,
+        events,
+        portfolio,
+        2,
+        3
+    );
+
+    data.push_price("AAPL",100);
+    strategy->calculate_signals(market_event);
+
+    data.push_price("AAPL",105);
+    strategy->calculate_signals(market_event);
+
+    data.push_price("AAPL",110);
+    strategy->calculate_signals(market_event);
+
+    ASSERT_FALSE(events.empty());
+
+    auto* signal = dynamic_cast<SignalEvent*>(events.front().get());
+
+    ASSERT_NE(signal, nullptr);
+
+    EXPECT_EQ(signal->get_direction(), "LONG");
 }

@@ -2,7 +2,7 @@
 #include <cmath>
 #include <numbers>
 
-const double PI = 3.14159265358979323846;
+constexpr double PI = std::numbers::pi;
 
 MovingAveragesLongStrategy::MovingAveragesLongStrategy(DataHandler& data,
 	std::queue<std::unique_ptr<Event>>& events,
@@ -10,28 +10,43 @@ MovingAveragesLongStrategy::MovingAveragesLongStrategy(DataHandler& data,
 	int short_period,
 	int long_period) :
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
+	//std::cout << "this = " << this << std::endl;
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought.at(symbol) = false;
-		bars_processed.at(symbol) = 0;
-		short_ema.at(symbol) = 0.0;
-		long_ema.at(symbol) = 0.0;
+		/*for (const auto& bar : data.get_latest_bars(symbol, 1)) {
+			std::cout << "[DEBUG] Initial bar for " << symbol << ": " << bar.close << " at " << std::chrono::system_clock::to_time_t(bar.datetime) << std::endl;
+		}
+		std::cout << "[DEBUG] Initializing maps for symbol: " << symbol << std::endl;*/
+		bought[symbol] = false;
+		bars_processed[symbol] = 0;
+		short_ema[symbol] = 0.0;
+		long_ema[symbol] = 0.0;
 	}
+	//std::cout << "this in the end = " << this << std::endl;
+	//std::cout << "[DEBUG] Strategy Constructor Finished" << std::endl;
 }
 
-void MovingAveragesLongStrategy::update_ema(const std::string& symbol, double price) {
-	bars_processed.at(symbol)++;
+std::optional<std::pair<double,double>>
+MovingAveragesLongStrategy::update_ema(const std::string& symbol, double price)
+{
+    bars_processed[symbol]++;
 
-	if (bars_processed.at(symbol) == 1) { // 
-		short_ema.at(symbol) = price;
-		long_ema.at(symbol) = price;
-	} else {
-		double alpha_short = 2.0 / (short_period + 1.0);
-		double alpha_long = 2.0 / (long_period + 1.0);
+    if (bars_processed[symbol] == 1) {
+        short_ema[symbol] = price;
+        long_ema[symbol] = price;
+        return std::nullopt;
+    }
 
-		short_ema.at(symbol) = (price * alpha_short) + (short_ema.at(symbol) * (1.0 - alpha_short));
-		long_ema.at(symbol) = (price * alpha_long) + (long_ema.at(symbol) * (1.0 - alpha_long));
-	}
+    double short_k = 2.0 / (short_period + 1);
+    double long_k  = 2.0 / (long_period + 1);
+
+    short_ema[symbol] = price * short_k + short_ema[symbol] * (1 - short_k);
+	long_ema[symbol] = price * long_k +long_ema[symbol] * (1 - long_k);
+
+    if (bars_processed[symbol] < long_period)
+        return std::nullopt;
+
+    return std::make_pair(short_ema[symbol], long_ema[symbol]);
 }
 
 void MovingAveragesLongStrategy::calculate_signals(const Event& event) {
@@ -46,13 +61,12 @@ void MovingAveragesLongStrategy::calculate_signals(const Event& event) {
 		double price = bars[0].close;
 		auto date = bars[0].datetime;
 
-		update_ema(symbol, price);
+		auto ema = update_ema(symbol, price);
 
-		if (bars_processed.at(symbol) < long_period)
-			continue;
+        if (!ema)
+            continue;
 
-		double s_ema = short_ema.at(symbol);
-		double l_ema = long_ema.at(symbol);
+		auto [s_ema, l_ema] = *ema;
 
 		if (!bought.at(symbol) && s_ema > l_ema) {
 			int quantity = static_cast<int>(std::floor(portfolio.get_cash() / price));
@@ -93,26 +107,36 @@ MovingAveragesLongShortStrategy::MovingAveragesLongShortStrategy(DataHandler& da
 	data(data), events(events), portfolio(portfolio), short_period(short_period), long_period(long_period) {
 	symbol_list = data.get_symbols();
 	for (const auto& symbol : symbol_list) {
-		bought.at(symbol) = false;
-		bars_processed.at(symbol) = 0;
-		short_ema.at(symbol) = 0.0;
-		long_ema.at(symbol) = 0.0;
+		bought[symbol] = false;
+		bars_processed[symbol] = 0;
+		short_ema[symbol] = 0.0;
+		long_ema[symbol] = 0.0;
 	}
 }
 
-void MovingAveragesLongShortStrategy::update_ema(const std::string& symbol, double price) {
-	bars_processed.at(symbol)++;
+std::optional<std::pair<double,double>>
+MovingAveragesLongShortStrategy::update_ema(const std::string& symbol, double price)
+{
+    bars_processed[symbol]++;
 
-	if (bars_processed.at(symbol) == 1) {
-		short_ema.at(symbol) = price;
-		long_ema.at(symbol) = price;
-	} else {
-		double alpha_short = 2.0 / (short_period + 1.0);
-		double alpha_long = 2.0 / (long_period + 1.0);
+    if (bars_processed[symbol] == 1) {
+        short_ema[symbol] = price;
+        long_ema[symbol] = price;
+        return std::nullopt;
+    }
 
-		short_ema.at(symbol) = (price * alpha_short) + (short_ema.at(symbol) * (1.0 - alpha_short));
-		long_ema.at(symbol) = (price * alpha_long) + (long_ema.at(symbol) * (1.0 - alpha_long));
-	}
+    double short_k = 2.0 / (short_period + 1);
+    double long_k  = 2.0 / (long_period + 1);
+
+    short_ema[symbol] = price * short_k + short_ema[symbol] * (1 - short_k);
+
+    long_ema[symbol] = price * long_k +
+long_ema[symbol] * (1 - long_k);
+
+    if (bars_processed[symbol] < long_period)
+        return std::nullopt;
+
+    return std::make_pair(short_ema[symbol], long_ema[symbol]);
 }
 
 void MovingAveragesLongShortStrategy::calculate_signals(const Event& event) {
@@ -127,13 +151,13 @@ void MovingAveragesLongShortStrategy::calculate_signals(const Event& event) {
 		double price = bars[0].close;
 		auto date = bars[0].datetime;
 
-		update_ema(symbol, price);
+		auto ema = update_ema(symbol, price);
 
-		if (bars_processed.at(symbol) < long_period)
-			continue;
+        if (!ema)
+            continue;
 
-		double s_ema = short_ema.at(symbol);
-		double l_ema = long_ema.at(symbol);
+		auto [s_ema, l_ema] = *ema;
+
 		int current_positions = portfolio.get_position(symbol);
 
 		if (!bought.at(symbol) && s_ema > l_ema) {
@@ -182,19 +206,29 @@ MovingAveragesMomentumStrategy::MovingAveragesMomentumStrategy(DataHandler& data
 	}
 }
 
-void MovingAveragesMomentumStrategy::update_ema(const std::string& symbol, double price) {
-	bars_processed[symbol]++;
+std::optional<std::pair<double,double>>
+MovingAveragesMomentumStrategy::update_ema(const std::string& symbol, double price)
+{
+    bars_processed[symbol]++;
 
-	if (bars_processed[symbol] == 1) {
-		short_ema[symbol] = price;
-		long_ema[symbol] = price;
-	} else {
-		double alpha_short = 2.0 / (short_period + 1.0);
-		double alpha_long = 2.0 / (long_period + 1.0);
+    if (bars_processed[symbol] == 1) {
+        short_ema[symbol] = price;
+        long_ema[symbol] = price;
+        return std::nullopt;
+    }
 
-		short_ema[symbol] = (price * alpha_short) + (short_ema[symbol] * (1.0 - alpha_short));
-		long_ema[symbol] = (price * alpha_long) + (long_ema[symbol] * (1.0 - alpha_long));
-	}
+    double short_k = 2.0 / (short_period + 1);
+    double long_k  = 2.0 / (long_period + 1);
+
+    short_ema[symbol] = price * short_k + short_ema[symbol] * (1 - short_k);
+
+    long_ema[symbol] = price * long_k +
+long_ema[symbol] * (1 - long_k);
+
+    if (bars_processed[symbol] < long_period)
+        return std::nullopt;
+
+    return std::make_pair(short_ema[symbol], long_ema[symbol]);
 }
 
 void MovingAveragesMomentumStrategy::calculate_signals(const Event& event) {
@@ -209,13 +243,12 @@ void MovingAveragesMomentumStrategy::calculate_signals(const Event& event) {
 		double price = bars[0].close;
 		auto date = bars[0].datetime;
 
-		update_ema(symbol, price);
+		auto ema = update_ema(symbol, price);
 
-		if (bars_processed[symbol] < long_period)
-			continue;
+        if (!ema)
+            continue;
 
-		double s_ema = short_ema[symbol];
-		double l_ema = long_ema[symbol];
+		auto [s_ema, l_ema] = *ema;
 
 		double diff = l_ema - s_ema;
 		double factor = std::abs(2.0 * std::atan(diff) / PI);

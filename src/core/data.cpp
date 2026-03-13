@@ -11,7 +11,6 @@ HistoricCSVDataHandler::HistoricCSVDataHandler(std::queue<std::unique_ptr<Event>
 	const std::string& csv_dir_,
 	const std::vector<std::string>& symbol_list_) :
 	events(events_), csv_dir(csv_dir_), symbol_list(symbol_list_) {
-
 	open_and_parse_csv();
 	for (const auto& symbol : symbol_list) {
 		latest_symbol_data[symbol] = {}; // default initialization of vector of bars for each symbol

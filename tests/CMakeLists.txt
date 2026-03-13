@@ -20,6 +20,7 @@ qt_add_executable(backtester_tests
         data_tests.cpp
         event_tests.cpp
         macd_tests.cpp
+        stop_loss_tests.cpp
 )
 
 target_include_directories(backtester_tests PRIVATE

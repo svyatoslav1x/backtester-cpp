@@ -1,6 +1,7 @@
 #pragma once
 #include <gtest/gtest.h>
 #include <chrono>
+#include<chrono>
 #include "../../include/event.h"
 
 class EventTest : public ::testing::Test {
@@ -12,6 +13,5 @@ protected:
     }
 
     void TearDown() override {
-        // Можно очищать ресурсы, если нужно
     }
 };

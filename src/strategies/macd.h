@@ -10,6 +10,7 @@
 #include "../../include/event.h"
 #include "../../include/portfolio.h"
 #include "../../include/strategy.h"
+#include <optional>
 
 // Long Only
 class MovingAveragesLongStrategy : public Strategy {
@@ -27,7 +28,7 @@ private:
 	std::unordered_map<std::string, double> short_ema;
 	std::unordered_map<std::string, double> long_ema;
 
-	void update_ema(const std::string& symbol, double price);
+	std::optional<std::pair<double,double>> update_ema(const std::string& symbol, double price);
 public:
 	MovingAveragesLongStrategy(DataHandler& data,
 		std::queue<std::unique_ptr<Event>>& events,
@@ -58,7 +59,7 @@ private:
 	std::unordered_map<std::string, double> short_ema;
 	std::unordered_map<std::string, double> long_ema;
 
-	void update_ema(const std::string& symbol, double price);
+	std::optional<std::pair<double,double>> update_ema(const std::string& symbol, double price);
 public:
 	MovingAveragesLongShortStrategy(DataHandler& data,
 									std::queue<std::unique_ptr<Event>>& events,
@@ -86,7 +87,7 @@ private:
 	std::unordered_map<std::string, double> short_ema;
 	std::unordered_map<std::string, double> long_ema;
 
-	void update_ema(const std::string& symbol, double price);
+	std::optional<std::pair<double,double>> update_ema(const std::string& symbol, double price);
 public:
 	MovingAveragesMomentumStrategy(DataHandler& data,
 								   std::queue<std::unique_ptr<Event>>& events,
@@ -98,3 +99,4 @@ public:
 	void plot() override;
 	std::map<std::string, double> get_indicators() const override;
 };
+
