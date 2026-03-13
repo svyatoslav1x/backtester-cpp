@@ -1,6 +1,6 @@
 # Backtester C++ — Windows Setup for CLion
 
-This guide explains how to download, build, and run **backtester-cpp** on **Windows** using **CLion**.
+Download, build, and run **backtester-cpp** on **Windows** using **CLion**.
 
 Repository:
 
@@ -152,20 +152,4 @@ After the toolchain and CMake profile are set:
 2. Select the main executable target
 3. Click **Build**
 
-The main target is usually:
-
-- `backtester-cpp`
-
-If CMake configures correctly, CLion should detect the targets automatically.
-
----
-
-## 7. Run from terminal
-
-If you want to build from the terminal with your MinGW Qt setup:
-
-```bash
-cmake -S . -B cmake-build-debug -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH="C:\Qt\6.10.2\mingw_64"
-cmake --build cmake-build-debug
-```
 
