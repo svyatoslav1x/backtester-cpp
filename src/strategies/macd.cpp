@@ -222,8 +222,7 @@ MovingAveragesMomentumStrategy::update_ema(const std::string& symbol, double pri
 
     short_ema[symbol] = price * short_k + short_ema[symbol] * (1 - short_k);
 
-    long_ema[symbol] = price * long_k +
-long_ema[symbol] * (1 - long_k);
+    long_ema[symbol] = price * long_k + long_ema[symbol] * (1 - long_k);
 
     if (bars_processed[symbol] < long_period)
         return std::nullopt;
