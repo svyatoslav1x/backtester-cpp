@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QLabel>
 #include <QPushButton>
+#include <optional>
 
 class StartScreen : public QWidget {
     Q_OBJECT
@@ -18,7 +19,7 @@ public:
 
     void setDatasets(const QStringList &names);
 
-    QString selectedDataset() const;
+    std::optional<QString> selectedDataset() const;
 
     QComboBox *datasetCombo() const;
 

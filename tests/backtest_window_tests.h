@@ -7,15 +7,10 @@
 
 class BacktestWindowTest : public ::testing::Test {
 protected:
-    QPointer<BacktestWindow> window;
+    std::unique_ptr<BacktestWindow> window;
 
     void SetUp() override {
-        window = new BacktestWindow();
-    }
-
-    void TearDown() override {
-        delete window;
-        window = nullptr;
+        window = std::make_unique<BacktestWindow>();
     }
 };
 
