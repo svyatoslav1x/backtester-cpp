@@ -1,43 +1,91 @@
 #include "stop_loss_tests.h"
 
+TEST_F(LossTest, NoSignalOnFirstBar)
+{
+    data.push_price("AAPL", 0.5);
 
-class FakeDataHandler : public DataHandler {
-public:
-    std::vector<std::string> symbols = {"AAPL"};
-    std::vector<Bar> bars;
+    MarketEvent event;
+    strategy->calculate_signals(event);
 
-    std::vector<std::string> get_symbols() const override {
-        return symbols;
-    }
-    void update_bars() override {};
-    bool if_continue_backtest() const override {return true;};
-    virtual std::vector<Bar> get_latest_bars(const std::string& symbol, std::size_t N = 1) const override {
-        if (bars.size() < N)
-            return bars;
-        return {bars.end() - N, bars.end()};
-    }
+    EXPECT_TRUE(events.empty());
+}
 
-    void push_price(double price) {
-        Bar b{};
-        b.close = price;
-        b.datetime = std::chrono::system_clock::now();
-        bars.push_back(b);
-    }
-};
+TEST_F(LossTest, GeneratesLongSignal)
+{
+    data.push_price("AAPL", 10.0);
 
-class FakePortfolio : public Portfolio {
-public:
-    double cash = 1000;
-    int position = 0;
+    MarketEvent event;
+    strategy->calculate_signals(event);
 
-    double get_cash() const override {
-        return cash;
-    }
+    ASSERT_FALSE(events.empty());
 
-    int get_position(const std::string&) const override {
-        return position;
-    }
-    virtual void update_timeindex(const Event& event) override {};
-	virtual void update_signal(const Event& event) override {};
-	virtual void update_fill(const Event& event) override {};
-};
+    auto* signal = dynamic_cast<SignalEvent*>(events.front().get());
+
+    ASSERT_NE(signal, nullptr);
+    EXPECT_EQ(signal->get_symbol(), "AAPL");
+    EXPECT_EQ(signal->get_direction(), "LONG");
+}
+
+TEST_F(LossTest, GeneratesExitSignal)
+{
+    data.push_price("AAPL", 10.0);
+
+    MarketEvent event;
+    strategy->calculate_signals(event);
+
+    events = {};
+
+    data.push_price("AAPL", 8.0);
+
+    strategy->calculate_signals(event);
+
+    ASSERT_FALSE(events.empty());
+
+    auto* signal = dynamic_cast<SignalEvent*>(events.front().get());
+
+    ASSERT_NE(signal, nullptr);
+    EXPECT_EQ(signal->get_direction(), "EXIT");
+}
+
+TEST_F(LossTest, TrailingStopMovesUp)
+{
+    data.push_price("AAPL", 10.0);
+
+    MarketEvent event;
+    strategy->calculate_signals(event);
+
+    events = {};
+
+    data.push_price("AAPL", 12.0);
+    strategy->calculate_signals(event);
+
+    auto indicators = strategy->get_indicators();
+
+    ASSERT_TRUE(indicators.count("Stop Level") > 0);
+
+    double stop = indicators["Stop Level"];
+
+    EXPECT_GT(stop, 9.0);
+}
+
+TEST_F(LossTest, StopNeverMovesDown)
+{
+    data.push_price("AAPL", 10.0);
+
+    MarketEvent event;
+    strategy->calculate_signals(event);
+
+    events = {};
+
+    data.push_price("AAPL", 12.0);
+    strategy->calculate_signals(event);
+
+    double stop1 = strategy->get_indicators()["Stop Level"];
+
+    data.push_price("AAPL", 11.0);
+    strategy->calculate_signals(event);
+
+    double stop2 = strategy->get_indicators()["Stop Level"];
+
+    EXPECT_GE(stop2, stop1);
+}
