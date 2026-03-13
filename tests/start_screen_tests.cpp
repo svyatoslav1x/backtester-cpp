@@ -23,7 +23,8 @@ TEST_F(StartScreenTest, SelectedDatasetReturnsCurrentItem) {
     screen->setDatasets({"AAPL.csv", "SNP.csv"});
     screen->datasetCombo()->setCurrentIndex(1);
 
-    EXPECT_EQ(screen->selectedDataset(), "SNP.csv");
+    ASSERT_TRUE(screen->selectedDataset().has_value());
+    EXPECT_EQ(*screen->selectedDataset(), "SNP.csv");
 }
 
 TEST_F(StartScreenTest, SetNewsTextUpdatesText) {
@@ -39,7 +40,7 @@ TEST_F(StartScreenTest, StartButtonEmitsSignal) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->startButton(), nullptr);
 
-    QSignalSpy spy(screen, &StartScreen::startBacktestSwitch);
+    QSignalSpy spy(screen.get(), &StartScreen::startBacktestSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->startButton(), Qt::LeftButton);
@@ -51,7 +52,7 @@ TEST_F(StartScreenTest, CreateStrategyButtonEmitsSignal) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->createStrategyButton(), nullptr);
 
-    QSignalSpy spy(screen, &StartScreen::createStrategySwitch);
+    QSignalSpy spy(screen.get(), &StartScreen::createStrategySwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->createStrategyButton(), Qt::LeftButton);
@@ -63,10 +64,19 @@ TEST_F(StartScreenTest, ManageStrategiesButtonEmitsSignal) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->manageStrategiesButton(), nullptr);
 
-    QSignalSpy spy(screen, &StartScreen::manageStrategiesSwitch);
+    QSignalSpy spy(screen.get(), &StartScreen::manageStrategiesSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->manageStrategiesButton(), Qt::LeftButton);
 
     EXPECT_EQ(spy.count(), 1);
+}
+
+TEST_F(StartScreenTest, SelectedDatasetReturnsNulloptWhenNoDatasetsExist) {
+    ASSERT_NE(screen, nullptr);
+    ASSERT_NE(screen->datasetCombo(), nullptr);
+
+    screen->setDatasets({});
+
+    EXPECT_FALSE(screen->selectedDataset().has_value());
 }

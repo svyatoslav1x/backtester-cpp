@@ -7,16 +7,12 @@
 
 class MainWindowTest : public ::testing::Test {
 protected:
-    QPointer<MainWindow> window;
+    std::unique_ptr<MainWindow> window;
 
     void SetUp() override {
-        window = new MainWindow();
+        window = std::make_unique<MainWindow>();
     }
 
-    void TearDown() override {
-        delete window;
-        window = nullptr;
-    }
 };
 
 #endif //BACKTESTER_CPP_MAINWINDOW_TESTS_H

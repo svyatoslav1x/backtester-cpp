@@ -20,6 +20,8 @@
 #include <QSqlQuery>
 #include <QUrl>
 #include <QUrlQuery>
+#include <memory>
+#include <variant>
 
 #include "../../include/backtester.h"
 #include "../../include/data.h"
@@ -71,7 +73,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     setCentralWidget(stacked_widget); // makes the stacket_widget the main widget for the window
 
     seedStrategiesIfNeeded();
-    // adds the default 2 strategies, todo:when SlavaA does the 3rd strategy add it to database
+    // adds the default 2 strategies
     refreshStrategyList(); // makes a list for all the strategies
     loadDatasets(); // gets all the datasets (data/*.csv)
 
@@ -99,7 +101,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             });
 
     connect(backtest_screen, &BacktestWindow::toDoneScreen, this, [this] {
-        // todo: use done_screen.setResults to set results omg
         stacked_widget->setCurrentWidget(done_screen);
     });
 
@@ -183,7 +184,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             const int strategyId = strategyQuery.lastInsertId().toInt(); // to add parameters
             QSqlQuery paramQuery(db);
 
-            if (input.type == "MovingAveragesLongStrategy") {
+            if (std::holds_alternative<MovingAverageParams>(input.params)) {
+                const auto &params = std::get<MovingAverageParams>(input.params);
                 // depending on the type of strategy we can adjust different things
                 paramQuery.prepare(R"(
                         INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable)
@@ -191,7 +193,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     )");
                 paramQuery.addBindValue(strategyId);
                 paramQuery.addBindValue("short_window");
-                paramQuery.addBindValue(QString::number(input.shortWindow)); // convert to string the number
+                paramQuery.addBindValue(QString::number(params.shortWindow)); // convert to string the number
                 paramQuery.addBindValue("int");
                 paramQuery.addBindValue(1);
                 // adding the short_window value for the newly created strategy
@@ -208,7 +210,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     )");
                 paramQuery.addBindValue(strategyId);
                 paramQuery.addBindValue("long_window");
-                paramQuery.addBindValue(QString::number(input.longWindow)); // convert to string the number
+                paramQuery.addBindValue(QString::number(params.longWindow)); // convert to string the number
                 paramQuery.addBindValue("int");
                 paramQuery.addBindValue(1); // needed for edit strategies screen
                 // adding the long_window value for the newly created strategy
@@ -218,14 +220,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     QMessageBox::warning(this, "Error", "idk what this is");
                     return;
                 }
-            } else if (input.type == "StopLossStrategy") {
+            } else if (std::holds_alternative<StopLossParams>(input.params)) {
+                const auto &params = std::get<StopLossParams>(input.params);
                 paramQuery.prepare(R"(
                         INSERT INTO strategy_parameters (strategy_id, param_key, param_value, value_type, is_editable)
                         VALUES (?, ?, ?, ?, ?)
                     )");
                 paramQuery.addBindValue(strategyId);
                 paramQuery.addBindValue("stop_loss_percentage");
-                paramQuery.addBindValue(QString::number(input.stopLossPercentage, 'f', 2));
+                paramQuery.addBindValue(QString::number(params.stopLossPercentage, 'f', 2));
                 paramQuery.addBindValue("double");
                 paramQuery.addBindValue(1); // needed for edit strategies screen
 
@@ -256,20 +259,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(select_strategy_screen, &SelectStrategyScreen::StartBacktestSwitch, this, [this] {
         backtest_screen->resetUI();
 
-        const int selectedId = select_strategy_screen->selectedStrategyId();
-        QString dataset_file = start_screen->selectedDataset();
+        const auto selectedId = select_strategy_screen->selectedStrategyId();
+        const auto datasetFile = start_screen->selectedDataset();
 
-        if (selectedId < 0 || dataset_file.isEmpty() || dataset_file == "No datasets found") {
-            QMessageBox::warning(this, "Selection Incomplete",
-                                 "Please select a valid dataset and a strategy.");
+        if (!selectedId || !datasetFile) {
+            QMessageBox::warning(this, "Error", "Select a valid dataset and a strategy.");
             return;
         }
+
+        const int strategyId = *selectedId;
+        QString dataset_file = *datasetFile;
 
         // clean up any previous simulation engine to prevent memory leaks and dangling connections
         stopCurrentSimulation();
 
         // create a FRESH engine for this specific run
-        simulation_engine = new SimulationEngine(this);
+        simulation_engine = std::make_unique<SimulationEngine>(this);
 
         try {
             std::string symbol = dataset_file.replace(".csv", "").toStdString();
@@ -283,7 +288,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
             auto bt = std::make_unique<Backtester>(events, std::move(dh), std::move(port), std::move(exec));
 
-            StrategyData strat_data = edit_strategy_screen->get_strategy(selectedId);
+            StrategyData strat_data = edit_strategy_screen->get_strategy(strategyId);
             std::unique_ptr<Strategy> strategy_instance;
 
             if (strat_data.model_type == "MovingAveragesLongStrategy") {
@@ -299,7 +304,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                 QMessageBox::warning(this, "Error",
                                      "Unknown Strategy Type in Database: " + strat_data.model_type);
                 simulation_engine->deleteLater(); // clean up if strategy fails
-                simulation_engine = nullptr;
                 return;
             }
 
@@ -307,20 +311,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             simulation_engine->setup(std::move(bt), symbol);
 
             // connect signals from the NEWLY created engine
-            connect(simulation_engine, &SimulationEngine::priceUpdated, backtest_screen,
+            connect(simulation_engine.get(), &SimulationEngine::priceUpdated, backtest_screen,
                     &BacktestWindow::add_data_point);
-            connect(simulation_engine, &SimulationEngine::equityUpdated, backtest_screen,
+            connect(simulation_engine.get(), &SimulationEngine::equityUpdated, backtest_screen,
                     &BacktestWindow::add_equity_point);
-            connect(simulation_engine, &SimulationEngine::maUpdated, backtest_screen,
+            connect(simulation_engine.get(), &SimulationEngine::maUpdated, backtest_screen,
                     &BacktestWindow::add_ma_point);
-            connect(simulation_engine, &SimulationEngine::signalUpdated, backtest_screen,
+            connect(simulation_engine.get(), &SimulationEngine::signalUpdated, backtest_screen,
                     &BacktestWindow::add_signal_marker);
-            connect(backtest_screen, &BacktestWindow::pauseToggled, simulation_engine,
+            connect(backtest_screen, &BacktestWindow::pauseToggled, simulation_engine.get(),
                     &SimulationEngine::setPaused);
-            connect(simulation_engine, &SimulationEngine::progressUpdated,
-                backtest_screen, &BacktestWindow::update_progress);
+            connect(simulation_engine.get(), &SimulationEngine::progressUpdated,
+                    backtest_screen, &BacktestWindow::update_progress);
 
-            connect(simulation_engine, &SimulationEngine::simulationFinished, this,
+            connect(simulation_engine.get(), &SimulationEngine::simulationFinished, this,
                     [this](const QString &stats) {
                         done_screen->setResults(stats);
                         backtest_screen->set_simulation_finished();
@@ -607,9 +611,8 @@ void MainWindow::stopCurrentSimulation() {
     }
 
     disconnect(backtest_screen, &BacktestWindow::pauseToggled,
-               simulation_engine, &SimulationEngine::setPaused);
+               simulation_engine.get(), &SimulationEngine::setPaused);
 
     simulation_engine->stop();
-    simulation_engine->deleteLater();
-    simulation_engine = nullptr;
+    simulation_engine.reset();
 }

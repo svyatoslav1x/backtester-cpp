@@ -8,14 +8,24 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
+#include <variant>
 #include <QSpinBox>
+
+struct MovingAverageParams {
+    int shortWindow = 12;
+    int longWindow = 50;
+};
+
+struct StopLossParams {
+    double stopLossPercentage = 0.95;
+};
+
+using StrategyParams = std::variant<MovingAverageParams, StopLossParams>;
 
 struct CreateStrategyInput {
     QString name;
     QString type;
-    int shortWindow = 20;
-    int longWindow = 50;
-    double stopLossPercentage = 0.90;
+    StrategyParams params;
 };
 
 class CreateStrategyScreen : public QWidget {

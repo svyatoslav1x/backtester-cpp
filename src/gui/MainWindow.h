@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QNetworkAccessManager>
 #include <QStackedWidget>
+#include <memory>
 
 #include "screens/BacktestWindow.h"
 #include "screens/SimulationEngine.h"
@@ -59,7 +60,7 @@ private:
     QPointer<QStackedWidget> stacked_widget;
 
     // simulation engine
-    SimulationEngine *simulation_engine;
+    std::unique_ptr<SimulationEngine> simulation_engine;
 
     // different helpers
     QLinearGradient gradient;
