@@ -4,7 +4,6 @@
 #include "../../../include/backtester.h"
 #include <QObject>
 #include <QTimer>
-#include <random>
 
 class SimulationEngine : public QObject {
 	Q_OBJECT
@@ -44,6 +43,14 @@ private:
 	int time_step;
 	int total_steps = 0;
     bool finished = false;
+
+	static constexpr int TICK_INTERVAL_MS = 50;
+	static constexpr int PREFILL_COUNT = 50;
+	static constexpr int MAX_PROGRESS_PERCENT = 99;
+
+	static constexpr int STEPS_AAPL   = 755;
+	static constexpr int STEPS_OMXS30 = 4813;
+	static constexpr int STEPS_SNP    = 4528;
 };
 
 #endif

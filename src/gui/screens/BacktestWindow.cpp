@@ -5,6 +5,7 @@
 
 #include <QHBoxLayout>
 #include <QSplitter>
+#include <stdexcept>
 
 BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 	main_layout = new QVBoxLayout(this);
@@ -13,11 +14,11 @@ BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 	charts_layout = new QVBoxLayout(charts_view);
 
 	splitter = new QSplitter(Qt::Vertical);
-	equity_chart = new ChartWidget("Portfolio Value", false);
-	price_chart = new ChartWidget("Asset Price", true);
+	equity_chart = std::make_unique<ChartWidget>("Portfolio Value", false);
+	price_chart = std::make_unique<ChartWidget>("Asset Price", true);
 
-	splitter->addWidget(equity_chart);
-	splitter->addWidget(price_chart);
+	splitter->addWidget(equity_chart.get());
+	splitter->addWidget(price_chart.get());
 	splitter->setStretchFactor(0, 1);
 	splitter->setStretchFactor(1, 1);
 
@@ -55,13 +56,26 @@ BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 
 BacktestWindow::~BacktestWindow() {}
 
-void BacktestWindow::add_data_point(double x, double y) { price_chart->add_data_point(x, y); }
+void BacktestWindow::add_data_point(double x, double y) {
+	if (!price_chart)
+		throw std::runtime_error("Price chart not initialized");
+
+	price_chart->add_data_point(x, y);
+}
 
 void BacktestWindow::add_ma_point(double x, double short_ma, double long_ma) {
+	if (!price_chart)
+		throw std::runtime_error("Price chart not initialized");
+
 	price_chart->add_ma_point(x, short_ma, long_ma);
 }
 
-void BacktestWindow::add_equity_point(double x, double y) { equity_chart->add_data_point(x, y); }
+void BacktestWindow::add_equity_point(double x, double y) {
+	if (!price_chart)
+		throw std::runtime_error("Price chart not initialized");
+
+	equity_chart->add_data_point(x, y);
+}
 
 void BacktestWindow::on_pause_clicked() {
 	is_paused = !is_paused;

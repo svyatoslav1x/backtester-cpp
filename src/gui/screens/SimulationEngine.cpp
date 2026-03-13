@@ -10,12 +10,12 @@ void SimulationEngine::startSimulation() {
 		return;
 
 	// pre-fill the first 50 data points instantly so the chart isn't empty on load
-	for (int i = 0; i < 50; ++i) {
+	for (int i = 0; i < PREFILL_COUNT; ++i) {
 		simulateStep();
 	}
 
-	// start periodic updates (e.g., 50ms per tick for smooth visualization)
-	timer.start(50);
+	// start periodic updates (50ms per tick for smooth visualization)
+	timer.start(TICK_INTERVAL_MS);
 }
 
 void SimulationEngine::setup(std::unique_ptr<Backtester> bt, const std::string& symbol) {
@@ -24,9 +24,9 @@ void SimulationEngine::setup(std::unique_ptr<Backtester> bt, const std::string& 
 	time_step = 0;
 	last_position = 0;
 	finished = false;
-	if (symbol == "AAPL") total_steps = 755;
-	else if (symbol == "OMXS30") total_steps = 4813;
-	else if (symbol == "SNP") total_steps = 4528;
+	if (symbol == "AAPL") total_steps = STEPS_AAPL;
+	else if (symbol == "OMXS30") total_steps = STEPS_OMXS30;
+	else if (symbol == "SNP") total_steps = STEPS_SNP;
 }
 
 void SimulationEngine::stop() {
@@ -108,7 +108,7 @@ void SimulationEngine::simulateStep() {
 
 	if (total_steps > 0) {
 		int percentage = static_cast<int>((static_cast<double>(time_step) / total_steps) * 100.0);
-		emit progressUpdated(std::min(percentage, 99));
+		emit progressUpdated(std::min(percentage, MAX_PROGRESS_PERCENT));
 	}
 
 	time_step++;
@@ -122,6 +122,6 @@ void SimulationEngine::setPaused(bool isPaused) {
 	if (isPaused) {
 		timer.stop();
 	} else {
-		timer.start(50);
+		timer.start(TICK_INTERVAL_MS);
 	}
 }

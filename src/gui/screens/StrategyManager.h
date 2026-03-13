@@ -71,7 +71,7 @@ public:
 
     bool add_strategy(const QString &name, const QString &model_type, const QMap<QString, QString> &parameters);
 
-    StrategyData get_strategy(int id);
+    std::optional<StrategyData> get_strategy(int id);
 
     bool strategy_name_exists(const QString &name, int excludeId = -1);
 

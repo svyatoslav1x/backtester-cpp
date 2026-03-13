@@ -7,6 +7,7 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <memory>
 
 class ChartWidget;
 
@@ -43,8 +44,8 @@ private slots:
 private:
 	QPointer<QWidget> charts_view;
 
-	QPointer<ChartWidget> equity_chart;
-	QPointer<ChartWidget> price_chart;
+	std::unique_ptr<ChartWidget> equity_chart;
+	std::unique_ptr<ChartWidget> price_chart;
 
 	QPointer<QPushButton> pause_button;
 	QPointer<QPushButton> back_button;

@@ -156,17 +156,15 @@ QVector<StrategyData> StrategyManager::get_all_strategies() {
     return strategies;
 }
 
-StrategyData StrategyManager::get_strategy(int id) {
-    StrategyData data;
-    data.id = -1;
+std::optional<StrategyData> StrategyManager::get_strategy(int id) {
     QSqlDatabase db = StrategyDatabase::database();
-
     QSqlQuery query(db);
     query.prepare("SELECT id, name, model_type, is_editable FROM strategies WHERE id = ?");
     query.addBindValue(id);
     query.exec();
 
     if (query.next()) {
+        StrategyData data;
         data.id = query.value(0).toInt();
         data.name = query.value(1).toString();
         data.model_type = query.value(2).toString();
@@ -180,15 +178,17 @@ StrategyData StrategyManager::get_strategy(int id) {
         while (pQuery.next()) {
             data.parameters[pQuery.value(0).toString()] = pQuery.value(1).toString();
         }
+        return data;
     }
 
-    return data;
+    return std::nullopt;
 }
 
 void StrategyManager::on_edit_clicked(int id) {
-    StrategyData strategy = get_strategy(id);
-    if (strategy.id < 0) return;
+    auto strategyOpt = get_strategy(id);
+    if (!strategyOpt) return;
 
+    const auto &strategy = *strategyOpt;
     if (!strategy.is_editable) {
         QMessageBox::warning(this, "Error", "This strategy is not editable.");
         return;
@@ -347,15 +347,12 @@ void StrategyManager::on_list_item_double_clicked(QListWidgetItem *item) {
 }
 
 void StrategyManager::on_delete_clicked(int id) {
-    StrategyData strategy = get_strategy(id);
-    if (strategy.id < 0) return;
+    auto strategyOpt = get_strategy(id);
+    if (!strategyOpt) return;
 
     QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-                                                              QString("Are you sure you want to delete strategy '%1'?").
-                                                              arg(strategy.name),
-                                                              QMessageBox::Yes | QMessageBox::No);
-
-    if (reply == QMessageBox::Yes) {
+                                                              QString("Are you sure you want to delete strategy '%1'?").arg(strategyOpt->name),
+                                                              QMessageBox::Yes | QMessageBox::No); if (reply == QMessageBox::Yes) {
         if (remove_strategy(id)) {
             load_strategies();
             emit strategy_updated();
