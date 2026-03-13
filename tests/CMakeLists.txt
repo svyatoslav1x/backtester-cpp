@@ -17,10 +17,17 @@ qt_add_executable(backtester_tests
         create_strategy_screen_tests.cpp
         strategy_database_tests.cpp
         mainwindow_tests.cpp
+        strategy_manager_tests.cpp
+        chart_widget_tests.cpp
+        backtest_window_tests.cpp
+        simulation_engine_tests.cpp
         data_tests.cpp
         event_tests.cpp
+<<<<<<< HEAD
         macd_tests.cpp
         stop_loss_tests.cpp
+=======
+>>>>>>> 902cbd5af3bd4d6fba3b06e175999f4119fd0f95
 )
 
 target_include_directories(backtester_tests PRIVATE

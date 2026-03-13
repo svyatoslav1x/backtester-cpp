@@ -24,6 +24,9 @@ void SimulationEngine::setup(std::unique_ptr<Backtester> bt, const std::string& 
 	time_step = 0;
 	last_position = 0;
 	finished = false;
+	if (symbol == "AAPL") total_steps = 755;
+	else if (symbol == "OMXS30") total_steps = 4813;
+	else if (symbol == "SNP") total_steps = 4528;
 }
 
 void SimulationEngine::stop() {
@@ -54,6 +57,7 @@ void SimulationEngine::simulateStep() {
 			}
 		}
 
+		emit progressUpdated(100);
 		emit simulationFinished(final_stats);
 		return;
 	}
@@ -100,6 +104,11 @@ void SimulationEngine::simulateStep() {
 
 	if (short_ma > 0 || long_ma > 0) {
 		emit maUpdated(time_step, short_ma, long_ma);
+	}
+
+	if (total_steps > 0) {
+		int percentage = static_cast<int>((static_cast<double>(time_step) / total_steps) * 100.0);
+		emit progressUpdated(std::min(percentage, 99));
 	}
 
 	time_step++;

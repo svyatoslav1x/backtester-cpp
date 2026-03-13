@@ -80,6 +80,10 @@ public:
     QVector<StrategyData> get_all_strategies();
 
     bool remove_strategy(int id);
+
+    // for tests
+    QPointer<QPushButton> backButton() const { return back_button; }
+    QPointer<QListWidget> strategyList() const { return strategy_list; }
 };
 
 #endif

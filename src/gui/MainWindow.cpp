@@ -317,6 +317,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                     &BacktestWindow::add_signal_marker);
             connect(backtest_screen, &BacktestWindow::pauseToggled, simulation_engine,
                     &SimulationEngine::setPaused);
+            connect(simulation_engine, &SimulationEngine::progressUpdated,
+                backtest_screen, &BacktestWindow::update_progress);
 
             connect(simulation_engine, &SimulationEngine::simulationFinished, this,
                     [this](const QString &stats) {
