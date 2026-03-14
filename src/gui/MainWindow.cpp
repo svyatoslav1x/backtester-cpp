@@ -288,7 +288,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
             auto bt = std::make_unique<Backtester>(events, std::move(dh), std::move(port), std::move(exec));
 
-            StrategyData strat_data = edit_strategy_screen->get_strategy(strategyId);
+            StrategyData strat_data = edit_strategy_screen->get_strategy(strategyId).value();
             std::unique_ptr<Strategy> strategy_instance;
 
             if (strat_data.model_type == "MovingAveragesLongStrategy") {

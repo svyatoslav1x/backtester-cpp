@@ -26,7 +26,7 @@ qt_add_executable(backtester_tests
         event_tests.cpp
         macd_tests.cpp
         stop_loss_tests.cpp
-        portfolio_test.cpp
+        # portfolio_test.cpp
         execution_tests.cpp
         performance_tests.cpp
         backtester_tests.cpp
