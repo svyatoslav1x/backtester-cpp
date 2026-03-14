@@ -1,112 +1,155 @@
-## Strategy description
+# Backtester C++ — Windows Setup for CLion
 
-SharpRatio - сколько доходности стратегия приносит на единицу риска -> it is calculated afetr implementing the strategy
+Download, build, and run **backtester-cpp** on **Windows** using **CLion**.
 
-The strategy coefficient is defined as:
+Repository:
 
-<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
-  <mtable displaystyle="true" columnalign="right" columnspacing="" rowspacing="3pt">
-    <mtr>
-      <mtd>
-        <mi>S</mi>
-        <mo>=</mo>
-        <mfrac>
-          <mrow>
-            <mrow data-mjx-texclass="ORD">
-              <mi mathvariant="double-struck">E</mi>
-            </mrow>
-            <mo stretchy="false">(</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>a</mi>
-            </msub>
-            <mo>&#x2212;</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>b</mi>
-            </msub>
-            <mo stretchy="false">)</mo>
-          </mrow>
-          <msqrt>
-            <mtext>Var</mtext>
-            <mo stretchy="false">(</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>a</mi>
-            </msub>
-            <mo>&#x2212;</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>b</mi>
-            </msub>
-            <mo stretchy="false">)</mo>
-          </msqrt>
-        </mfrac>
-      </mtd>
-    </mtr>
-  </mtable>
-</math>
-Where \(R_a\) and \(R_b\) are the returns of two assets. The strategy is to go long on asset \(a\) and short on asset \(b\) when the strategy coefficient \(S\) is above a certain threshold, and to do the opposite when \(S\) is below a certain threshold.
-The ratio compares the mean average of the excess returns of the asset or strategy with the standard deviation of those returns. Thus a lower volatility of returns will lead to a greater Sharpe ratio, assuming identical returns.
+- https://github.com/svyatoslav1x/backtester-cpp
 
-The "Sharpe Ratio" often quoted by those carrying out trading strategies is the annualised Sharpe, the calculation of which depends upon the trading period of which the returns are measured. Assuming there are 
- trading periods in a year, the annualised Sharpe is calculated as follows:
- <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
-  <mtable displaystyle="true" columnalign="right" columnspacing="" rowspacing="3pt">
-    <mtr>
-      <mtd>
-        <msub>
-          <mi>S</mi>
-          <mi>A</mi>
-        </msub>
-        <mo>=</mo>
-        <msqrt>
-          <mi>N</mi>
-        </msqrt>
-        <mfrac>
-          <mrow>
-            <mrow data-mjx-texclass="ORD">
-              <mi mathvariant="double-struck">E</mi>
-            </mrow>
-            <mo stretchy="false">(</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>a</mi>
-            </msub>
-            <mo>&#x2212;</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>b</mi>
-            </msub>
-            <mo stretchy="false">)</mo>
-          </mrow>
-          <msqrt>
-            <mtext>Var</mtext>
-            <mo stretchy="false">(</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>a</mi>
-            </msub>
-            <mo>&#x2212;</mo>
-            <msub>
-              <mi>R</mi>
-              <mi>b</mi>
-            </msub>
-            <mo stretchy="false">)</mo>
-          </msqrt>
-        </mfrac>
-      </mtd>
-    </mtr>
-  </mtable>
-</math>
+This version of the guide is for people who already use **CLion** and want to build the project there without being
+pushed into a Visual Studio setup. It also works for a **Qt + MinGW** setup such as **Qt 6.10.2 MinGW**, as long as your
+compiler and Qt kit match.
 
-##Limitations
+The project is a **CMake-based Qt 6 C++ application** with tests.
 
-The Sharpe ratio has several limitations that should be considered when using it to evaluate the performance of an investment or trading
+---
 
-##Benchmark for our strategy - IMOEX
-so need to update SNP.csv database to IMOEX.csv database
+## 1. What you need
 
-##A bit of structure
+To build this project in CLion on Windows, you need:
 
-DataHandler → MarketEvent → Strategy → SignalEvent → Portfolio → OrderEvent → ExecutionHandler
+- **CLion**
+- **Qt 6**
+- a working **compiler toolchain**
+- **CMake**
+- **Git** if you want to clone the repo
+
+You do **not** need Visual Studio if your current setup already works in CLion.
+
+### Supported practical setup
+
+A working example is:
+
+- **CLion**
+- **Qt 6.10.2 MinGW**
+- **MinGW compiler**
+- **CMake** bundled with CLion or installed separately
+
+The important rule is simple:
+
+- **MinGW Qt** must be used with a **MinGW compiler**
+- **MSVC Qt** must be used with **MSVC**
+
+Do **not** mix them.
+
+---
+
+## 2. Official download links
+
+### Project
+
+- GitHub repository: https://github.com/svyatoslav1x/backtester-cpp
+- ZIP download: https://github.com/svyatoslav1x/backtester-cpp/archive/refs/heads/master.zip
+
+### Tools
+
+- CLion: https://www.jetbrains.com/clion/download/
+- Qt open-source download page: https://www.qt.io/download-open-source
+- Git for Windows: https://git-scm.com/download/win
+- CMake: https://cmake.org/download/
+
+---
+
+## 3. Download the project
+
+### Option A — Clone with Git
+
+Open a terminal and run:
+
+```bash
+git clone https://github.com/svyatoslav1x/backtester-cpp.git
+cd backtester-cpp
+```
+
+### Option B — Download ZIP
+
+1. Open the repository page:
+   `https://github.com/svyatoslav1x/backtester-cpp`
+2. Click **Code**
+3. Click **Download ZIP**
+4. Extract it
+5. Open the extracted folder in CLion
+
+---
+
+## 4. Open the project in CLion
+
+1. Start **CLion**
+2. Choose **Open**
+3. Select the project folder that contains `CMakeLists.txt`
+4. Let CLion load the CMake project
+
+If CLion asks about the toolchain or CMake profile, configure it as described below.
+
+---
+
+## 5. Configure CLion for Qt 6.10.2 MinGW
+
+If you already have **Qt 6.10.2 MinGW** installed and it works on your machine, keep using that setup.
+
+### Step 1 — Check your Qt path
+
+A typical path looks like this:
+
+```text
+C:\Qt\6.10.2\mingw_64
+```
+
+Your exact folder name may differ slightly depending on the Qt package you installed.
+
+### Step 2 — Check your MinGW compiler path
+
+Common examples:
+
+```text
+C:\Qt\Tools\mingw...
+```
+
+or another MinGW installation already configured in CLion.
+
+### Step 3 — Set the CLion toolchain
+
+In **CLion**:
+
+1. Open **File -> Settings -> Build, Execution, Deployment -> Toolchains**
+2. Make sure the toolchain uses your **MinGW** compiler
+3. Check that **C Compiler** and **C++ Compiler** point to the MinGW installation you actually use
+4. Make sure **CMake** is available
+5. Apply the changes
+
+### Step 4 — Set the CMake profile
+
+In **CLion**:
+
+1. Open **File -> Settings -> Build, Execution, Deployment -> CMake**
+2. In **CMake options**, add:
+
+```text
+-DCMAKE_PREFIX_PATH=C:\Qt\6.10.2\mingw_64
+```
+
+If your Qt folder is different, use your real path instead.
+
+That tells CMake where to find Qt.
+
+---
+
+## 6. Build the project in CLion
+
+After the toolchain and CMake profile are set:
+
+1. Reload the CMake project if needed
+2. Select the main executable target
+3. Click **Build**
+
+

@@ -283,7 +283,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
             auto bt = std::make_unique<Backtester>(events, std::move(dh), std::move(port), std::move(exec));
 
-            StrategyData strat_data = edit_strategy_screen->get_strategy(selectedId);
+            auto strat_opt = edit_strategy_screen->get_strategy(selectedId);
+
+            if (!strat_opt) {
+                QMessageBox::warning(this, "Error", "The selected strategy could not be found in the database.");
+                return;
+            }
+
+            const StrategyData &strat_data = *strat_opt;
             std::unique_ptr<Strategy> strategy_instance;
 
             if (strat_data.model_type == "MovingAveragesLongStrategy") {

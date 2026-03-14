@@ -10,7 +10,7 @@ QString StrategyDatabase::connectionName() { return "strategy_database_connectio
 QString StrategyDatabase::databasePath() {
 	QDir dir(QCoreApplication::applicationDirPath());
 
-	if (dir.dirName().startsWith("cmake-build")) {
+	if (dir.dirName().contains("build")) {
 		dir.cdUp();
 	}
 
