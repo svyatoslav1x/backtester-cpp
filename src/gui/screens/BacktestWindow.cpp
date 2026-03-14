@@ -5,7 +5,6 @@
 
 #include <QHBoxLayout>
 #include <QSplitter>
-#include <stdexcept>
 
 BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 	main_layout = new QVBoxLayout(this);
@@ -65,28 +64,13 @@ BacktestWindow::BacktestWindow(QWidget* parent) : QWidget(parent) {
 BacktestWindow::~BacktestWindow() {}
 
 // pass price point to the price chart
-void BacktestWindow::add_data_point(double x, double y) {
-	if (!price_chart)
-		throw std::runtime_error("Price chart not initialized");
-
-	price_chart->add_data_point(x, y);
-}
+void BacktestWindow::add_data_point(double x, double y) { price_chart->add_data_point(x, y); }
 
 // pass MA points to the price chart
-void BacktestWindow::add_ma_point(double x, double short_ma, double long_ma) {
-	if (!price_chart)
-		throw std::runtime_error("Price chart not initialized");
-
-	price_chart->add_ma_point(x, short_ma, long_ma);
-}
+void BacktestWindow::add_ma_point(double x, double short_ma, double long_ma) { price_chart->add_ma_point(x, short_ma, long_ma); }
 
 // pass equity point updates to the equity chart
-void BacktestWindow::add_equity_point(double x, double y) {
-	if (!equity_chart)
-		throw std::runtime_error("Equity chart not initialized");
-
-	equity_chart->add_data_point(x, y);
-}
+void BacktestWindow::add_equity_point(double x, double y) { equity_chart->add_data_point(x, y); }
 
 // handles the logic for toggling the pause state and updating the button's look
 void BacktestWindow::on_pause_clicked() {
