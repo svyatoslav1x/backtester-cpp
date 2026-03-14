@@ -7,7 +7,7 @@
 //
 // In addition, if we are presented with two strategies possessing identical returns how do we know which one
 // contains more risk ?
-//  Further, what do we even mean by "more risk" ? In finance, we are often concerned with volatility of
+//  Further, what do we even mean by "more risk"? In finance, we are often concerned with volatility of
 //  returns and periods of drawdown. Thus if one of these strategies has a significantly higher volatility of
 //  returns we would likely find it less attractive, despite the fact that its historical returns might be
 //  similar if not identical.
@@ -22,7 +22,7 @@
 namespace performance {
 
 // Calculates the Sharpe Ratio for the strategy.
-// 'returns' A vector of period percentage returns.
+// 'returns' is a vector of period percentage returns.
 // 'periods' is the number of trading periods in a year (e.g., 252 for daily).
 // It returns the annualized Sharpe Ratio.
 double calculate_sharpe_ratio(const std::vector<double>& returns, double periods = 252.0);
