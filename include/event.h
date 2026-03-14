@@ -82,7 +82,13 @@ class FillEvent : public Event {
 	int quantity; // the quantity of SHARES transacted
 	std::string direction; // 'BUY' or 'SELL' for long or short
 	double fill_cost; // the cost of the fill in dollars
+
 	double commission; // commission for trading on IB (Interactive Brokers exchange)
+	static constexpr double IB_MIN_COMMISSION = 1.30;
+	static constexpr double IB_RATE_TIER_1 = 0.013;
+	static constexpr double IB_RATE_TIER_2 = 0.008;
+	static constexpr int IB_TIER_THRESHOLD = 500;
+	static constexpr double IB_MAX_PCT_CAP = 0.005;
 public:
 	FillEvent(std::chrono::system_clock::time_point time,
 			  std::string s,

@@ -2,14 +2,15 @@
 #include "../../include/csv_reader.h"
 
 #include <algorithm>
+#include <expected>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
 
 HistoricCSVDataHandler::HistoricCSVDataHandler(std::queue<std::unique_ptr<Event>>& events_,
-	const std::string& csv_dir_,
-	const std::vector<std::string>& symbol_list_) :
+											   const std::string& csv_dir_,
+											   const std::vector<std::string>& symbol_list_) :
 	events(events_), csv_dir(csv_dir_), symbol_list(symbol_list_) {
 	open_and_parse_csv();
 	for (const auto& symbol : symbol_list) {
