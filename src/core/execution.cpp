@@ -21,7 +21,7 @@ void SimulatedExecutionHandler::execute_order(const Event& event) {
 	auto fill_event = std::make_unique<FillEvent>(fill_time, order_event.get_symbol(), "SIM_EXCHANGE",
 												  order_event.get_quantity(), order_event.get_direction(),
 												  0.0, // fill_cost (to be estimated by Portfolio)
-												  -1.0 // commission
+												  -1.0 // pass -1 to trigger IB commission calculation
 	);
 
 	events.push(std::move(fill_event));

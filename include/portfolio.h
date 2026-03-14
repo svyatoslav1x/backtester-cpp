@@ -62,7 +62,7 @@ private:
 	struct {
 		double cash;
 		double commission;
-		double total;
+		double total; // cash + (positions * current market price)
 		std::unordered_map<std::string, double> symbols;
 	} current_holdings;
 

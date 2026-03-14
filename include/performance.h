@@ -1,5 +1,5 @@
 // When carrying out an algorithmic trading strategy it is tempting to consider the annualised return as the
-// most useful performance metric.However, there are many flaws with using this measure in isolation.
+// most useful performance metric. However, there are many flaws with using this measure in isolation.
 //  The calculation of returns for certain strategies is not completely straightforward.
 //  This is especially true for strategies that aren't directional such as market-neutral variants or
 //  strategies which make use of leverage. These factors make it hard to compare two strategies based solely
@@ -18,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+// namespace here is used for more modular organization of performance-related calculations
 namespace performance {
 
 // Calculates the Sharpe Ratio for the strategy.
