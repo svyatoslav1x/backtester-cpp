@@ -29,6 +29,7 @@ qt_add_executable(backtester_tests
         portfolio_test.cpp
         execution_tests.cpp
         performance_tests.cpp
+        backtester_tests.cpp
 )
 
 target_include_directories(backtester_tests PRIVATE
