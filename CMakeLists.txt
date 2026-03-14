@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_TESTS "Build tests" ON)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Sql Network Charts Test)
 
@@ -83,5 +84,10 @@ endif()
 
 if(BUILD_TESTS)
     enable_testing()
-   add_subdirectory(tests)
+    add_subdirectory(tests)
+endif()
+
+if(ENABLE_ASAN)
+    target_compile_options(backtester-cpp PUBLIC -fsanitize=address -fno-omit-frame-pointer -g)
+    target_link_options(backtester-cpp PUBLIC -fsanitize=address)
 endif()
