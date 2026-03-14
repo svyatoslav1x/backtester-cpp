@@ -7,15 +7,10 @@
 
 class ChartWidgetTest : public ::testing::Test {
 protected:
-    QPointer<ChartWidget> chart;
+    std::unique_ptr<ChartWidget> chart;
 
     void SetUp() override {
-        chart = new ChartWidget("Asset Price", true);
-    }
-
-    void TearDown() override {
-        delete chart;
-        chart = nullptr;
+        chart = std::make_unique<ChartWidget>("Asset Price", true);
     }
 };
 

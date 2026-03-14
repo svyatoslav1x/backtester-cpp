@@ -21,8 +21,15 @@ qt_add_executable(backtester_tests
         chart_widget_tests.cpp
         backtest_window_tests.cpp
         simulation_engine_tests.cpp
+
         data_tests.cpp
         event_tests.cpp
+        macd_tests.cpp
+        stop_loss_tests.cpp
+        portfolio_test.cpp
+        execution_tests.cpp
+        performance_tests.cpp
+        backtester_tests.cpp
 )
 
 target_include_directories(backtester_tests PRIVATE

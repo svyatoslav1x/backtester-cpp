@@ -20,7 +20,8 @@ bool Backtester::step() {
 		return false;
 	}
 
-	// trigger data heartbeat
+	// triggers system heartbeat (if there is data in csv files, processes new line
+	// , adds new bar to the latest_symbol_data and creates new MarketEvent)
 	data_handler->update_bars();
 
 	// process the Event Queue until it is completely empty for this specific timestamp
