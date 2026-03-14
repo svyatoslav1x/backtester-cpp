@@ -2,6 +2,8 @@
 
 #include "style.h"
 
+#include "optional"
+
 SelectStrategyScreen::SelectStrategyScreen(QWidget *parent) : QWidget(parent) {
     buildUi();
 }
@@ -71,8 +73,22 @@ void SelectStrategyScreen::setStrategies(const QList<QPair<QString, int> > &item
     }
 }
 
-int SelectStrategyScreen::selectedStrategyId() const {
-    return strategy_combo ? strategy_combo->currentData().toInt() : -1;
+std::optional<int> SelectStrategyScreen::selectedStrategyId() const {
+    if (!strategy_combo) {
+        return std::nullopt;
+    }
+
+    const QVariant data = strategy_combo->currentData();
+    if (!data.isValid()) {
+        return std::nullopt;
+    }
+
+    const int id = data.toInt();
+    if (id == -1) {
+        return std::nullopt;
+    }
+
+    return id;
 }
 
 QComboBox *SelectStrategyScreen::strategyCombo() const {

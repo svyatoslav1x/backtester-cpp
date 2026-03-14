@@ -176,15 +176,18 @@ CreateStrategyInput CreateStrategyScreen::input() const {
     if (strategy_type_combo) {
         out.type = strategy_type_combo->currentText();
     }
-    if (short_window_spin) {
-        out.shortWindow = short_window_spin->value();
+
+    if (out.type == "MovingAveragesLongStrategy") {
+        out.params = MovingAverageParams{
+            short_window_spin ? short_window_spin->value() : 12,
+            long_window_spin ? long_window_spin->value() : 50
+        };
+    } else {
+        out.params = StopLossParams{
+            stop_loss_spin ? stop_loss_spin->value() : 0.95
+        };
     }
-    if (long_window_spin) {
-        out.longWindow = long_window_spin->value();
-    }
-    if (stop_loss_spin) {
-        out.stopLossPercentage = stop_loss_spin->value();
-    }
+
     return out;
 }
 

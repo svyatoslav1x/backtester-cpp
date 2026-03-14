@@ -3,6 +3,7 @@
 
 #include <QVBoxLayout>
 #include <QPointer>
+#include <optional>
 #include <QLabel>
 #include <QPushButton>
 #include <QComboBox>
@@ -15,9 +16,7 @@ public:
 
     void setStrategies(const QList<QPair<QString, int> > &items);
 
-    int selectedStrategyId() const;
-
-    QString selectedStrategyText() const;
+    std::optional<int> selectedStrategyId() const;
 
     QComboBox *strategyCombo() const;
 

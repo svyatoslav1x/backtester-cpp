@@ -13,7 +13,7 @@ TEST_F(BacktestWindowTest, InitialStateIsCorrect) {
 TEST_F(BacktestWindowTest, PauseButtonTogglesStateAndEmitsSignal) {
     ASSERT_NE(window, nullptr);
 
-    QSignalSpy spy(window, &BacktestWindow::pauseToggled);
+    QSignalSpy spy(window.get(), &BacktestWindow::pauseToggled);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(window->pauseButton(), Qt::LeftButton);
@@ -28,7 +28,7 @@ TEST_F(BacktestWindowTest, PauseButtonTogglesStateAndEmitsSignal) {
 TEST_F(BacktestWindowTest, BackButtonEmitsToSelectStrategyScreen) {
     ASSERT_NE(window, nullptr);
 
-    QSignalSpy spy(window, &BacktestWindow::toSelectStrategyScreen);
+    QSignalSpy spy(window.get(), &BacktestWindow::toSelectStrategyScreen);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(window->backButton(), Qt::LeftButton);
