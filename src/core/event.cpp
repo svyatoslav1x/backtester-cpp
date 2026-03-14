@@ -31,16 +31,15 @@ FillEvent::FillEvent(std::chrono::system_clock::time_point time,
 }
 
 double FillEvent::calculate_ib_commission() const {
-	double full_cost = 1.3;
-	if (quantity <= 500) {
-		full_cost = std::max(1.3, 0.013 * quantity);
+	double cost = IB_MIN_COMMISSION;
+	if (quantity <= IB_TIER_THRESHOLD) {
+		cost = std::max(IB_MIN_COMMISSION, IB_RATE_TIER_1 * quantity);
 	} else {
-		full_cost = std::max(1.3, 0.008 * quantity);
+		cost = std::max(IB_MIN_COMMISSION, IB_RATE_TIER_2 * quantity);
 	}
 
 	if (fill_cost > 0.0) {
-		full_cost = std::min(full_cost, (0.5 / 100.0) * quantity * fill_cost);
+		cost = std::min(cost, IB_MAX_PCT_CAP * quantity * fill_cost);
 	}
-
-	return full_cost;
+	return cost;
 }
