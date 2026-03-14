@@ -86,11 +86,17 @@ void StartScreen::setDatasets(const QStringList &names) {
     }
 }
 
-QString StartScreen::selectedDataset() const {
-    if (dataset_combo) {
-        return dataset_combo->currentText();
+std::optional<QString> StartScreen::selectedDataset() const {
+    if (!dataset_combo) {
+        return std::nullopt;
     }
-    return "";
+
+    QString text = dataset_combo->currentText().trimmed();
+    if (text.isEmpty() || text == "No datasets found") {
+        return std::nullopt;
+    }
+
+    return text;
 }
 
 QComboBox *StartScreen::datasetCombo() const {

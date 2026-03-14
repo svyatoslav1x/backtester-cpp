@@ -32,6 +32,7 @@ TEST_F(SelectStrategyScreenTest, SelectedStrategyMethodsReturnCurrentSelection) 
 
     screen->strategyCombo()->setCurrentIndex(1);
 
+    ASSERT_TRUE(screen->selectedStrategyId().has_value());
     EXPECT_EQ(screen->selectedStrategyId(), 20);
 }
 
@@ -43,14 +44,14 @@ TEST_F(SelectStrategyScreenTest, EmptyListShowsFallback) {
 
     EXPECT_EQ(screen->strategyCombo()->count(), 1);
     EXPECT_EQ(screen->strategyCombo()->itemText(0), "No strategies available");
-    EXPECT_EQ(screen->selectedStrategyId(), -1);
+    EXPECT_FALSE(screen->selectedStrategyId().has_value());
 }
 
 TEST_F(SelectStrategyScreenTest, BackButtonEmitsStartScreenSwitch) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->backButton(), nullptr);
 
-    QSignalSpy spy(screen, &SelectStrategyScreen::StartScreenSwitch);
+    QSignalSpy spy(screen.get(), &SelectStrategyScreen::StartScreenSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->backButton(), Qt::LeftButton);
@@ -62,7 +63,7 @@ TEST_F(SelectStrategyScreenTest, StartBacktestButtonEmitsSignal) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->startBacktestButton(), nullptr);
 
-    QSignalSpy spy(screen, &SelectStrategyScreen::StartBacktestSwitch);
+    QSignalSpy spy(screen.get(), &SelectStrategyScreen::StartBacktestSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->startBacktestButton(), Qt::LeftButton);

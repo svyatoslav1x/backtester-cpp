@@ -5,7 +5,7 @@
 
 TEST_F(StrategyManagerTest, BackButtonEmitsSignal) {
     ASSERT_NE(manager->backButton(), nullptr);
-    QSignalSpy spy(manager, &StrategyManager::startScreenSwitch);
+    QSignalSpy spy(manager.get(), &StrategyManager::startScreenSwitch);
 
     QTest::mouseClick(manager->backButton(), Qt::LeftButton);
 

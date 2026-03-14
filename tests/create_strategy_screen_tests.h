@@ -7,15 +7,10 @@
 
 class CreateStrategyScreenTest : public ::testing::Test {
 protected:
-    QPointer<CreateStrategyScreen> screen;
+    std::unique_ptr<CreateStrategyScreen> screen;
 
     void SetUp() override {
-        screen = new CreateStrategyScreen();
-    }
-
-    void TearDown() override {
-        delete screen;
-        screen = nullptr;
+        screen = std::make_unique<CreateStrategyScreen>();
     }
 };
 

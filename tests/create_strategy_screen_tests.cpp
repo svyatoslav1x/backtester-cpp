@@ -24,8 +24,10 @@ TEST_F(CreateStrategyScreenTest, InputReturnsCurrentValues) {
 
     EXPECT_EQ(input.name, "AHA I CAN WRITE ANYTHING IN TESTS");
     EXPECT_EQ(input.type, "MovingAveragesLongStrategy");
-    EXPECT_EQ(input.shortWindow, 15);
-    EXPECT_EQ(input.longWindow, 60);
+    ASSERT_TRUE(std::holds_alternative<MovingAverageParams>(input.params));
+    const auto &params = std::get<MovingAverageParams>(input.params);
+    EXPECT_EQ(params.shortWindow, 15);
+    EXPECT_EQ(params.longWindow, 60);
 }
 
 TEST_F(CreateStrategyScreenTest, ResetFormRestoresDefaults) {
@@ -48,9 +50,10 @@ TEST_F(CreateStrategyScreenTest, ResetFormRestoresDefaults) {
 
     EXPECT_TRUE(input.name.isEmpty());
     EXPECT_EQ(input.type, "MovingAveragesLongStrategy");
-    EXPECT_EQ(input.shortWindow, 12);
-    EXPECT_EQ(input.longWindow, 50);
-    EXPECT_DOUBLE_EQ(input.stopLossPercentage, 0.95);
+    ASSERT_TRUE(std::holds_alternative<MovingAverageParams>(input.params));
+    const auto &params = std::get<MovingAverageParams>(input.params);
+    EXPECT_EQ(params.shortWindow, 12);
+    EXPECT_EQ(params.longWindow, 50);
 }
 
 TEST_F(CreateStrategyScreenTest, ParameterVisibilityMatchesSelectedType) {
@@ -99,7 +102,7 @@ TEST_F(CreateStrategyScreenTest, SaveButtonEmitsCurrentInput) {
     screen->shortWindowSpin()->setValue(10);
     screen->longWindowSpin()->setValue(40);
 
-    QSignalSpy spy(screen, &CreateStrategyScreen::saveStrategyRequested);
+    QSignalSpy spy(screen.get(), &CreateStrategyScreen::saveStrategyRequested);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->saveButton(), Qt::LeftButton);
@@ -112,18 +115,38 @@ TEST_F(CreateStrategyScreenTest, SaveButtonEmitsCurrentInput) {
     const auto input = qvariant_cast<CreateStrategyInput>(arguments[0]);
     EXPECT_EQ(input.name, "HOW CAN THEY MAKE FOLLOW THE RULES");
     EXPECT_EQ(input.type, "MovingAveragesLongStrategy");
-    EXPECT_EQ(input.shortWindow, 10);
-    EXPECT_EQ(input.longWindow, 40);
+    ASSERT_TRUE(std::holds_alternative<MovingAverageParams>(input.params));
+    const auto &params = std::get<MovingAverageParams>(input.params);
+    EXPECT_EQ(params.shortWindow, 10);
+    EXPECT_EQ(params.longWindow, 40);
 }
 
 TEST_F(CreateStrategyScreenTest, BackButtonEmitsStartScreenSwitch) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->backButton(), nullptr);
 
-    QSignalSpy spy(screen, &CreateStrategyScreen::StartScreenSwitch);
+    QSignalSpy spy(screen.get(), &CreateStrategyScreen::StartScreenSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->backButton(), Qt::LeftButton);
 
     EXPECT_EQ(spy.count(), 1);
+}
+
+TEST_F(CreateStrategyScreenTest, InputReturnsStopLossVariantForStopLossStrategy) {
+    ASSERT_NE(screen, nullptr);
+    ASSERT_NE(screen->nameEdit(), nullptr);
+    ASSERT_NE(screen->typeCombo(), nullptr);
+    ASSERT_NE(screen->stopLossSpin(), nullptr);
+
+    screen->nameEdit()->setText("Stop Loss Custom");
+    screen->typeCombo()->setCurrentText("StopLossStrategy");
+    screen->stopLossSpin()->setValue(0.91);
+
+    const auto input = screen->input();
+
+    EXPECT_EQ(input.type, "StopLossStrategy");
+    ASSERT_TRUE(std::holds_alternative<StopLossParams>(input.params));
+    const auto &params = std::get<StopLossParams>(input.params);
+    EXPECT_DOUBLE_EQ(params.stopLossPercentage, 0.91);
 }

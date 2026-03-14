@@ -8,15 +8,10 @@
 
 class SimulationEngineTest : public ::testing::Test {
 protected:
-    QPointer<SimulationEngine> engine;
+    std::unique_ptr<SimulationEngine> engine;
 
     void SetUp() override {
-        engine = new SimulationEngine();
-    }
-
-    void TearDown() override {
-        delete engine;
-        engine = nullptr;
+        engine = std::make_unique<SimulationEngine>();
     }
 };
 

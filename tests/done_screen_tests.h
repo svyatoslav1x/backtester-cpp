@@ -7,15 +7,10 @@
 
 class DoneScreenTest : public ::testing::Test {
 protected:
-    QPointer<DoneScreen> screen;
+    std::unique_ptr<DoneScreen> screen;
 
     void SetUp() override {
-        screen = new DoneScreen();
-    }
-
-    void TearDown() override {
-        delete screen;
-        screen = nullptr;
+        screen = std::make_unique<DoneScreen>();
     }
 };
 

@@ -9,15 +9,10 @@
 
 class StartScreenTest : public ::testing::Test {
 protected:
-    QPointer<StartScreen> screen;
+    std::unique_ptr<StartScreen> screen;
 
     void SetUp() override {
-        screen = new StartScreen();
-    }
-
-    void TearDown() override {
-        delete screen;
-        screen = nullptr;
+        screen = std::make_unique<StartScreen>();
     }
 };
 

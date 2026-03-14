@@ -30,6 +30,7 @@ void StopLossStrategy::calculate_signals(const Event& event) {
 
 		// Condition to buy: if we haven't bought yet and price > (initial_stop / percentage)
 		// With stop_loss_percentage = 0.9, 0.9 / 0.9 = 1.0. Buys on first tick > $1.0.
+		// it is out first enrry
 		if (!bought[symbol] && latest_close > (stop_loss[symbol] / stop_loss_percentage)) {
 			int quantity = static_cast<int>(std::floor(portfolio.get_cash() / latest_close));
 

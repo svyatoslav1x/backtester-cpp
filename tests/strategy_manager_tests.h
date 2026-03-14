@@ -7,15 +7,10 @@
 
 class StrategyManagerTest : public ::testing::Test {
 protected:
-    QPointer<StrategyManager> manager;
+    std::unique_ptr<StrategyManager> manager;
 
     void SetUp() override {
-        manager = new StrategyManager();
-    }
-
-    void TearDown() override {
-        delete manager;
-        manager = nullptr;
+        manager = std::make_unique<StrategyManager>();
     }
 };
 

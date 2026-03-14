@@ -6,7 +6,7 @@ TEST_F(SimulationEngineTest, InitialStatePreventsSimulation) {
 
     EXPECT_FALSE(engine->isFinished());
     
-    QSignalSpy progressSpy(engine, &SimulationEngine::progressUpdated);
+    QSignalSpy progressSpy(engine.get(), &SimulationEngine::progressUpdated);
     
     engine->startSimulation();
 

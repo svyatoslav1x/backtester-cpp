@@ -17,7 +17,7 @@ TEST_F(DoneScreenTest, HomeButtonEmitsStartScreenSwitch) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->homeButton(), nullptr);
 
-    QSignalSpy spy(screen, &DoneScreen::StartScreenSwitch);
+    QSignalSpy spy(screen.get(), &DoneScreen::StartScreenSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->homeButton(), Qt::LeftButton);
@@ -29,7 +29,7 @@ TEST_F(DoneScreenTest, ChartsButtonEmitsBacktestScreenSwitch) {
     ASSERT_NE(screen, nullptr);
     ASSERT_NE(screen->chartsButton(), nullptr);
 
-    QSignalSpy spy(screen, &DoneScreen::BacktestScreenSwitch);
+    QSignalSpy spy(screen.get(), &DoneScreen::BacktestScreenSwitch);
     ASSERT_TRUE(spy.isValid());
 
     QTest::mouseClick(screen->chartsButton(), Qt::LeftButton);
