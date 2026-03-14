@@ -14,17 +14,20 @@
 #include <QPointer>
 #include <QVBoxLayout>
 
+// data structure that represents a strategy loaded from the database
 struct StrategyData {
     int id;
     QString name;
     QString model_type;
-    int is_editable;
-    QMap<QString, QString> parameters;
+    int is_editable; // can the user modify this strategy?
+    QMap<QString, QString> parameters; // pairs for dynamic parameters (e.g. long_window, short_window)
 };
 
+// handles viewing, editing and deleting strategies from an SQLite database.
 class StrategyManager : public QWidget {
     Q_OBJECT
 
+    // QPointer are used for safety (automatically set to null if the object is destroyed)
     QPointer<QListWidget> strategy_list;
     QPointer<QPushButton> back_button;
 
@@ -48,27 +51,35 @@ class StrategyManager : public QWidget {
     QPointer<QLabel> type_label;
     QPointer<QDialogButtonBox> button_box;
 
+    // initializes the UI components and layouts
     void setup_ui();
 
 private slots:
+    // when the "Edit" button is clicked
     void on_edit_clicked(int id);
 
+    // when a strategy in the list is double-clicked
     void on_list_item_double_clicked(QListWidgetItem *item);
 
+    // when the "Delete" button is clicked
     void on_delete_clicked(int id);
 
 signals:
+    // emitted when a strategy is successfully updated, added or deleted to notify other components
     void strategy_updated();
 
+    // emitted to signal the main window to switch back to the start screen
     void startScreenSwitch();
 
 public:
     explicit StrategyManager(QWidget *parent = nullptr);
 
+    // load strategies from the database
     void load_strategies();
 
     ~StrategyManager();
 
+    // interaction with database
     bool add_strategy(const QString &name, const QString &model_type, const QMap<QString, QString> &parameters);
 
     std::optional<StrategyData> get_strategy(int id);
