@@ -11,11 +11,13 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QValueAxis>
 
+// QChartView subclass to enable mouse hovering and mouse wheel zooming
 class InteractiveChartView : public QChartView {
 	Q_OBJECT
 public:
 	explicit InteractiveChartView(QChart* chart, QWidget* parent = nullptr);
 protected:
+	// override default mouse/wheel events to emit custom signals
 	void wheelEvent(QWheelEvent* event) override;
 	void mouseMoveEvent(QMouseEvent* event) override;
 	void leaveEvent(QEvent* event) override;
@@ -25,6 +27,8 @@ signals:
 	void mouseLeft();
 };
 
+// ChartWidget acts as a wrapper for QChart, managing all series (lines/scatters),
+// auto-scaling axes, and dynamically generated metrics/tooltips.
 class ChartWidget : public QWidget {
 	Q_OBJECT
 private:
@@ -35,10 +39,10 @@ private:
 	QPointer<QLineSeries> long_ma_series;
 	QPointer<QValueAxis> axis_x;
 	QPointer<QValueAxis> axis_y;
-	QPointer<QLabel> tooltip_label;
-	QPointer<QLabel> metrics_label;
-	QPointer<QScatterSeries> buy_markers;
-	QPointer<QScatterSeries> sell_markers;
+	QPointer<QLabel> tooltip_label; // hover pop-up box
+	QPointer<QLabel> metrics_label; // Box tracking volatility, min/max, etc.
+	QPointer<QScatterSeries> buy_markers; // green triangles (buy)
+	QPointer<QScatterSeries> sell_markers; // red triangles (sell)
 	QPointer<QVBoxLayout> layout;
 
 	std::vector<double> x_data;
@@ -46,11 +50,13 @@ private:
 	std::vector<double> short_ma_data;
 	std::vector<double> long_ma_data;
 
-	bool is_price_chart;
+	bool is_price_chart; // Asset Price or Portfolio Value
 	int data_point_counter;
 
+	// calculates and updates the metrics_label based on y_data
 	void update_metrics();
 
+	// locates the nearest point to the user's cursor
 	QString format_point_info(const QPointF& point);
 
 private slots:
